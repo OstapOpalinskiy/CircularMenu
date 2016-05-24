@@ -1,5 +1,7 @@
 package com.opalinskiy.ostap.circularmenu;
 
+import android.animation.ObjectAnimator;
+import android.animation.ValueAnimator;
 import android.annotation.TargetApi;
 import android.content.Context;
 import android.graphics.Canvas;
@@ -14,7 +16,7 @@ import android.util.Log;
 import android.view.View;
 
 
-public class CircularMenuView extends View {
+public class CircularMenuView extends View implements ValueAnimator.AnimatorUpdateListener {
     private Context context;
     private Paint sectorPaint;
     private RectF arcBounds;
@@ -50,16 +52,30 @@ public class CircularMenuView extends View {
         init();
     }
 
+    public int getArcAngle() {
+        return arcAngle;
+    }
+
+    public void setArcAngle(int arcAngle) {
+        this.arcAngle = arcAngle;
+    }
+
     @TargetApi(Build.VERSION_CODES.JELLY_BEAN)
     private void init() {
-        Log.d("TAG", "init");
+        Log.d("TAG", "init in view");
         sectorPaint = new Paint();
+
         sectorPaint.setColor(Color.RED);
         sectorPaint.setAntiAlias(true);
         sectorPaint.setStyle(Paint.Style.FILL);
         sectorPaint.setStrokeWidth(1);
         sectorCount = 7;
         arcAngle = 360 / sectorCount;
+
+        ObjectAnimator animator = ObjectAnimator.ofFloat(this, "arcAngle", 360);
+        animator.setDuration(1000);
+        animator.addUpdateListener(this);
+        animator.start();
 
     }
 
@@ -147,9 +163,8 @@ public class CircularMenuView extends View {
     @Override
     protected void onSizeChanged(int w, int h, int oldw, int oldh) {
         r = Math.min(w, h)/2;
-        //TODO: remove hardcode
-        arcBounds = new RectF(100, 100, 100 + r, 100 + r);
-
+        Log.d("TAG", "onSizeChange in view");
+        arcBounds = new RectF(0, 0, r, r);
     }
 
     @Override
@@ -159,4 +174,9 @@ public class CircularMenuView extends View {
     }
 
 
+    @Override
+    public void onAnimationUpdate(ValueAnimator animation) {
+        Log.d("TAG", "onActionUpdate()");
+        invalidate();
+    }
 }
