@@ -39,6 +39,7 @@ public class CircularMenuView extends View {
             R.drawable.mms
     };
     private Drawable drawable;
+    private int selectedSector = 1;
 
 
     public CircularMenuView(Context context) {
@@ -83,11 +84,13 @@ public class CircularMenuView extends View {
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
         Log.d("TAG", "onDraw()");
-        drawSectors(canvas);
+       // drawSectors(canvas);
         drawLines(canvas);
         drawCenter(canvas);
         drawArks(canvas);
         drawIcons(canvas);
+        //  highlightSelectedSector(canvas);
+
     }
 
     private void drawIcons(Canvas canvas) {
@@ -97,9 +100,9 @@ public class CircularMenuView extends View {
         int leftEnd = (int) (centerX + (r * 0.07));
         int topEnd = (int) (centerY - r * 0.26);
 
-        for(int i = 0; i < sectorCount; i++){
+        for (int i = 0; i < sectorCount; i++) {
             drawable = ContextCompat.getDrawable(context, images[i]);
-            drawable.setBounds(leftStart, topStart, leftEnd, topEnd );
+            drawable.setBounds(leftStart, topStart, leftEnd, topEnd);
             Log.d("TAG", "centerX = " + centerX + "  centerY = " + centerY);
             drawable.draw(canvas);
             canvas.rotate(arcAngle, centerX, centerY);
@@ -107,15 +110,23 @@ public class CircularMenuView extends View {
     }
 
     private void drawLines(Canvas canvas) {
-        sectorPaint.setColor(Color.RED);
-        sectorPaint.setStyle(Paint.Style.STROKE);
-        sectorPaint.setStrokeWidth(3);
+//        sectorPaint.setColor(Color.RED);
+//        sectorPaint.setStyle(Paint.Style.STROKE);
+//        sectorPaint.setStrokeWidth(3);
+        for (int i = 0; i < sectorCount - 5; i++) {
 
-        int startAngleLines = 0;
-        int endAngleLines = 0;
-        for (int i = 0; i < sectorCount; i++) {
-            startAngleLines = i * arcAngle;
-            endAngleLines = startAngleLines + arcAngle;
+            int startAngleLines = i * arcAngle;
+            int endAngleLines = startAngleLines + arcAngle;
+
+            sectorPaint.setColor(Color.GRAY);
+            sectorPaint.setAntiAlias(true);
+            sectorPaint.setStyle(Paint.Style.FILL);
+
+            canvas.drawArc(arcBounds, startAngleLines, startAngleLines + arcAngle, true, sectorPaint);
+
+            sectorPaint.setColor(Color.RED);
+            sectorPaint.setStyle(Paint.Style.STROKE);
+            sectorPaint.setStrokeWidth(3);
             drawLine(canvas, endAngleLines, i);
         }
     }
@@ -124,13 +135,10 @@ public class CircularMenuView extends View {
         sectorPaint.setColor(Color.GRAY);
         sectorPaint.setAntiAlias(true);
         sectorPaint.setStyle(Paint.Style.FILL);
-        RectF bounds = new RectF (arcBounds.left + 5, arcBounds.top + 5, arcBounds.right - 5, arcBounds.bottom - 5);
-
-        int startAngle = 0;
+        RectF bounds = new RectF(arcBounds.left + 5, arcBounds.top + 5, arcBounds.right - 5, arcBounds.bottom - 5);
         for (int i = 0; i <= sectorCount; i++) {
-            startAngle = i * arcAngle;
+            int startAngle = i * arcAngle;
             canvas.drawArc(bounds, startAngle, startAngle + arcAngle, true, sectorPaint);
-
         }
     }
 
@@ -149,14 +157,22 @@ public class CircularMenuView extends View {
         sectorPaint.setStyle(Paint.Style.STROKE);
         sectorPaint.setStrokeWidth(7);
 
-        RectF bounds = new RectF (arcBounds.left + 5, arcBounds.top + 5, arcBounds.right - 4, arcBounds.bottom - 4);
+        RectF bounds = new RectF(arcBounds.left + 5, arcBounds.top + 5, arcBounds.right - 4, arcBounds.bottom - 4);
 
         canvas.drawArc(bounds, 0, 360, false, sectorPaint);
     }
 
+    private void highlightSelectedSector(Canvas canvas) {
+        if (selectedSector > 0) {
+            sectorPaint.setColor(Color.GREEN);
+            sectorPaint.setStyle(Paint.Style.FILL);
+            canvas.drawArc(arcBounds, arcAngle * selectedSector, arcAngle * (selectedSector + 1), true, sectorPaint);
+        }
+    }
+
     private void drawLine(Canvas canvas, int endAngle, int pos) {
-        float x = (float) ((r - 10) * Math.cos(Math.toRadians(360 - endAngle - arcAngle/4))) / 2;
-        float y = (float) ((r- 10) * Math.sin(Math.toRadians(360 - endAngle - arcAngle/4))) / 2;
+        float x = (float) ((r - 10) * Math.cos(Math.toRadians(360 - endAngle - arcAngle / 4))) / 2;
+        float y = (float) ((r - 10) * Math.sin(Math.toRadians(360 - endAngle - arcAngle / 4))) / 2;
         canvas.drawLine(arcBounds.centerX(), arcBounds.centerY(), arcBounds.centerX() + x, arcBounds.centerY() + y, sectorPaint);
     }
 
@@ -165,12 +181,12 @@ public class CircularMenuView extends View {
     protected void onSizeChanged(int w, int h, int oldw, int oldh) {
         r = Math.min(w, h);
         Log.d("TAG", "onSizeChange in view");
-        arcBounds = new RectF(0, 0, r, r );
-        Log.d("TAG", "Width from view onSizeChanged: " +  w);
-        Log.d("TAG", "Height from view onSizeChanged: " +  h);
+        arcBounds = new RectF(0, 0, r, r);
+        Log.d("TAG", "Width from view onSizeChanged: " + w);
+        Log.d("TAG", "Height from view onSizeChanged: " + h);
 
-        centerX = (int)arcBounds.centerX();
-        centerY = (int)arcBounds.centerY();
+        centerX = (int) arcBounds.centerX();
+        centerY = (int) arcBounds.centerY();
 
         setPivotX(centerX);
         setPivotY(centerY);
@@ -190,7 +206,6 @@ public class CircularMenuView extends View {
     }
 
 
-
     public int getCenterX() {
         return centerX;
     }
@@ -199,7 +214,7 @@ public class CircularMenuView extends View {
         return centerY;
     }
 
-    public void rotateTo(float angle){
+    public void rotateTo(float angle) {
         setRotation(angle);
     }
 

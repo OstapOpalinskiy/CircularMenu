@@ -41,6 +41,7 @@ public class CircularViewLayout extends ViewGroup {
         setWillNotDraw(false);
         pieView = new CircularMenuView(getContext());
         this.addView(pieView);
+
         detector = new GestureDetector(getContext(), new GestureListener());
         scroller = new Scroller(getContext(), null, true);
         scrollAnimator = ValueAnimator.ofFloat(0, 1);
@@ -82,6 +83,7 @@ public class CircularViewLayout extends ViewGroup {
     @Override
     public boolean onTouchEvent(MotionEvent event) {
         Log.d("TAG", "onTouch()");
+      //  pieView.invalidate();
         boolean result = detector.onTouchEvent(event);
         return result;
     }
