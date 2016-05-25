@@ -1,19 +1,25 @@
 package com.opalinskiy.ostap.circularmenu;
 
+import android.animation.ValueAnimator;
 import android.content.Context;
 import android.graphics.Canvas;
+import android.os.Build;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.ViewGroup;
+import android.widget.Scroller;
 
 /**
  * Created by Evronot on 24.05.2016.
  */
 public class CircularViewLayout extends ViewGroup {
+
     private CircularMenuView pieView;
     private GestureDetector detector;
+    private Scroller scroller;
+    private ValueAnimator scrollAnimator;
 
     public CircularViewLayout(Context context) {
         super(context);
@@ -30,33 +36,32 @@ public class CircularViewLayout extends ViewGroup {
         init();
     }
 
-//    public CircularViewLayout(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
-//        super(context, attrs, defStyleAttr, defStyleRes);
-//    }
-
     private void init() {
         Log.d("TAG", "init() in layout");
         setWillNotDraw(false);
         pieView = new CircularMenuView(getContext());
         this.addView(pieView);
         detector = new GestureDetector(getContext(), new GestureListener());
+        scroller = new Scroller(getContext(), null, true);
+        scrollAnimator = ValueAnimator.ofFloat(0, 1);
+        scrollAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+            public void onAnimationUpdate(ValueAnimator valueAnimator) {
+                tickScrollAnimation();
+            }
+        });
     }
 
 
     @Override
-    protected void onLayout(boolean changed, int l, int t, int r, int b) {
-
-    }
+    protected void onLayout(boolean changed, int l, int t, int r, int b) {}
 
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         Log.d("TAG", "onMeasure in layout");
-
         int minw = getPaddingLeft() + getPaddingRight() + getSuggestedMinimumWidth();
         int w = Math.max(minw, MeasureSpec.getSize(widthMeasureSpec));
-        int minh = w  + getPaddingBottom() + getPaddingTop();
+        int minh = w + getPaddingBottom() + getPaddingTop();
         int h = Math.min(MeasureSpec.getSize(heightMeasureSpec), minh);
-
         setMeasuredDimension(w, h);
     }
 
@@ -65,7 +70,7 @@ public class CircularViewLayout extends ViewGroup {
         super.onSizeChanged(w, h, oldw, oldh);
         int diameter = Math.min(w, h);
         pieView.layout(0, 0, diameter, diameter);
-        Log.d("TAG", "diameter from view.layout()" +  diameter);
+        Log.d("TAG", "diameter from view.layout()" + diameter);
     }
 
     @Override
@@ -81,14 +86,13 @@ public class CircularViewLayout extends ViewGroup {
         return result;
     }
 
-    private class GestureListener extends GestureDetector.SimpleOnGestureListener{
+    private class GestureListener extends GestureDetector.SimpleOnGestureListener {
         @Override
         public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX, float distanceY) {
             Log.d("TAG", "onScroll()");
             // Set the pie rotation directly.
             float scrollTheta = vectorToScalarScroll(
-                    distanceX,
-                    distanceY,
+                    distanceX, distanceY,
                     e2.getX() - pieView.getCenterX(),
                     e2.getY() - pieView.getCenterY());
             pieView.rotateTo(pieView.getRotation() - (int) scrollTheta / 4);
@@ -96,25 +100,31 @@ public class CircularViewLayout extends ViewGroup {
         }
 
         @Override
+        public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
+            float scrollTheta = vectorToScalarScroll(
+                    velocityX,
+                    velocityY,
+                    e2.getX() - pieView.getCenterX(),
+                    e2.getY() - pieView.getCenterY());
+
+            scroller.fling(0, (int) pieView.getRotation(),
+                    0, (int) scrollTheta / 8,
+                    0, 0, Integer.MIN_VALUE, Integer.MAX_VALUE);
+
+            scrollAnimator.setDuration(scroller.getDuration());
+            scrollAnimator.start();
+            return true;
+        }
+
+        @Override
         public boolean onDown(MotionEvent e) {
             Log.d("TAG", "onDown()");
-            // The user is interacting with the pie, so we want to turn on acceleration
-            // so that the interaction is smooth.
-//            pieView.accelerate();
-//            if (isAnimationRunning()) {
-//                stopScrolling();
-//            }
             return true;
         }
     }
 
-
     private static float vectorToScalarScroll(float dx, float dy, float x, float y) {
-        // get the length of the vector
         float l = (float) Math.sqrt(dx * dx + dy * dy);
-
-        // decide if the scalar should be negative or positive by finding
-        // the dot product of the vector perpendicular to (x,y).
         float crossX = -y;
         float crossY = x;
 
@@ -122,5 +132,14 @@ public class CircularViewLayout extends ViewGroup {
         float sign = Math.signum(dot);
 
         return l * sign;
+    }
+
+    private void tickScrollAnimation() {
+        if (!scroller.isFinished()) {
+            scroller.computeScrollOffset();
+            pieView.setRotation(scroller.getCurrY());
+        } else {
+            scrollAnimator.cancel();
+        }
     }
 }

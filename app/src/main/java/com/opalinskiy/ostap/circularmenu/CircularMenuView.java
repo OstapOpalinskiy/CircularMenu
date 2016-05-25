@@ -15,9 +15,10 @@ import android.util.AttributeSet;
 import android.util.Log;
 import android.view.GestureDetector;
 import android.view.View;
+import android.widget.Scroller;
 
 
-public class CircularMenuView extends View implements ValueAnimator.AnimatorUpdateListener {
+public class CircularMenuView extends View {
     private Context context;
     private Paint sectorPaint;
     private RectF arcBounds;
@@ -38,7 +39,7 @@ public class CircularMenuView extends View implements ValueAnimator.AnimatorUpda
             R.drawable.mms
     };
     private Drawable drawable;
-    private GestureDetector detector;
+
 
     public CircularMenuView(Context context) {
         super(context);
@@ -91,8 +92,6 @@ public class CircularMenuView extends View implements ValueAnimator.AnimatorUpda
 
     private void drawIcons(Canvas canvas) {
 
-//        int centerX = (int)arcBounds.centerX();
-//        int centerY = (int)arcBounds.centerY();
         int leftStart = (int) (centerX - (r * 0.07));
         int topStart = (int) (centerY - r * 0.4);
         int leftEnd = (int) (centerX + (r * 0.07));
@@ -175,24 +174,11 @@ public class CircularMenuView extends View implements ValueAnimator.AnimatorUpda
 
         setPivotX(centerX);
         setPivotY(centerY);
-
-//        ObjectAnimator animator = ObjectAnimator.ofFloat(this, "pieRotation", 720);
-//        animator.setDuration(5000);
-//        animator.addUpdateListener(this);
-//        animator.start();
     }
 
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
-    }
-
-
-    @Override
-    public void onAnimationUpdate(ValueAnimator animation) {
-//        Log.d("TAG", "onActionUpdate()");
-//        this.setPieRotation(pieRotation);
-//        invalidate();
     }
 
     public void setPieRotation(int pieRotation) {
@@ -216,4 +202,6 @@ public class CircularMenuView extends View implements ValueAnimator.AnimatorUpda
     public void rotateTo(float angle){
         setRotation(angle);
     }
+
+
 }
