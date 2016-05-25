@@ -9,9 +9,11 @@
     android:paddingTop="@dimen/activity_vertical_margin"
     tools:context="com.opalinskiy.ostap.circularmenu.MainActivity">
 
-    <com.opalinskiy.ostap.circularmenu.CircularMenuView
-    android:id="@+id/layout"
-    android:layout_width="500dp"
-    android:layout_height="500dp"
-    />
+
+    <com.opalinskiy.ostap.circularmenu.CircularViewLayout
+        android:id="@+id/layout"
+        android:layout_width="200dp"
+        android:layout_height="200dp"
+        android:layout_centerInParent="true"/>
+
 </RelativeLayout>
