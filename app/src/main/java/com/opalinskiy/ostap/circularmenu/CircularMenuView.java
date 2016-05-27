@@ -1,5 +1,6 @@
 package com.opalinskiy.ostap.circularmenu;
 
+import android.animation.ValueAnimator;
 import android.annotation.TargetApi;
 import android.content.Context;
 import android.graphics.Canvas;
@@ -11,10 +12,17 @@ import android.os.Build;
 import android.support.v4.content.ContextCompat;
 import android.util.AttributeSet;
 import android.util.Log;
+import android.view.GestureDetector;
+import android.view.MotionEvent;
 import android.view.View;
+import android.widget.Scroller;
 
 
 public class CircularMenuView extends View {
+    private GestureDetector detector;
+    private Scroller scroller;
+    private ValueAnimator scrollAnimator;
+
     private Context context;
     private Paint sectorPaint;
     private RectF arcBounds;
@@ -178,7 +186,15 @@ public class CircularMenuView extends View {
         sectorPaint.setStrokeWidth(1);
         sectorCount = images.length;
         arcAngle = 360 / (float) sectorCount;
-        setRotation(arcAngle+ 30);
+
+        detector = new GestureDetector(getContext(), new GestureListener());
+        scroller = new Scroller(getContext(), null, true);
+        scrollAnimator = ValueAnimator.ofFloat(0, 1);
+        scrollAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+            public void onAnimationUpdate(ValueAnimator valueAnimator) {
+                tickScrollAnimation();
+            }
+        });
     }
 
     private void highlightSelectedSector(Canvas canvas, int pos) {
@@ -247,4 +263,95 @@ public class CircularMenuView extends View {
     public void setSelectedSector(int selectedSector) {
         this.selectedSector = selectedSector;
     }
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
+    @Override
+    public boolean onTouchEvent(MotionEvent event) {
+        boolean result = detector.onTouchEvent(event);
+        float x = event.getX();
+        float y = event.getY();
+        Log.d("TAG", "x: " + x + " ,y: " + y );
+        return result;
+    }
+
+    private class GestureListener extends GestureDetector.SimpleOnGestureListener {
+        @Override
+        public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX, float distanceY) {
+            // Set the pie rotation directly.
+            float scrollTheta = vectorToScalarScroll(
+                    distanceX, distanceY,
+                    e2.getX() - centerX,
+                    e2.getY() - centerY);
+            rotateTo(getRotation() - (int) scrollTheta / 4);
+            return true;
+        }
+
+        @Override
+        public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
+            float scrollTheta = vectorToScalarScroll(
+                    velocityX,
+                    velocityY,
+                    e2.getX() - centerX,
+                    e2.getY() - centerY);
+
+            scroller.fling(0, (int) getRotation(),
+                    0, (int) scrollTheta / 8,
+                    0, 0, Integer.MIN_VALUE, Integer.MAX_VALUE);
+
+            scrollAnimator.setDuration(scroller.getDuration());
+            scrollAnimator.start();
+            return true;
+        }
+
+        @Override
+        public boolean onDown(MotionEvent e) {
+            //    Log.d("TAG", "onDown()");
+            //  pieView.invalidate();
+            float x = e.getX();
+            float y = e.getY();
+            int sectorNumber = getSector(x, y);
+
+            //  Log.d("TAG", " SECTOR NUMBER RESULT: " + sectorNumber);
+
+            if(sectorNumber > -1){
+
+                setSelectedSector(sectorNumber);
+                invalidate();
+            }
+            return true;
+        }
+    }
+
+    private static float vectorToScalarScroll(float dx, float dy, float x, float y) {
+        float l = (float) Math.sqrt(dx * dx + dy * dy);
+        float crossX = -y;
+        float crossY = x;
+
+        float dot = (crossX * dx + crossY * dy);
+        float sign = Math.signum(dot);
+
+        return l * sign;
+    }
+
+    private void tickScrollAnimation() {
+        if (!scroller.isFinished()) {
+            scroller.computeScrollOffset();
+            setRotation(scroller.getCurrY());
+        } else {
+            scrollAnimator.cancel();
+        }
+    }
+
 }

@@ -42,14 +42,14 @@ public class CircularViewLayout extends ViewGroup {
         pieView = new CircularMenuView(getContext());
         this.addView(pieView);
 
-        detector = new GestureDetector(getContext(), new GestureListener());
-        scroller = new Scroller(getContext(), null, true);
-        scrollAnimator = ValueAnimator.ofFloat(0, 1);
-        scrollAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
-            public void onAnimationUpdate(ValueAnimator valueAnimator) {
-                tickScrollAnimation();
-            }
-        });
+//        detector = new GestureDetector(getContext(), new GestureListener());
+//        scroller = new Scroller(getContext(), null, true);
+//        scrollAnimator = ValueAnimator.ofFloat(0, 1);
+//        scrollAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+//            public void onAnimationUpdate(ValueAnimator valueAnimator) {
+//                tickScrollAnimation();
+//            }
+//        });
     }
 
 
