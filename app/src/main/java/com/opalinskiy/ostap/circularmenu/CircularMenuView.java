@@ -1,7 +1,5 @@
 package com.opalinskiy.ostap.circularmenu;
 
-import android.animation.ObjectAnimator;
-import android.animation.ValueAnimator;
 import android.annotation.TargetApi;
 import android.content.Context;
 import android.graphics.Canvas;
@@ -13,9 +11,7 @@ import android.os.Build;
 import android.support.v4.content.ContextCompat;
 import android.util.AttributeSet;
 import android.util.Log;
-import android.view.GestureDetector;
 import android.view.View;
-import android.widget.Scroller;
 
 
 public class CircularMenuView extends View {
@@ -23,8 +19,7 @@ public class CircularMenuView extends View {
     private Paint sectorPaint;
     private RectF arcBounds;
     private int sectorCount;
-    private int arcAngle;
-    private int pieRotation;
+    private float arcAngle;
     private int r;
     int centerX;
     int centerY;
@@ -35,11 +30,12 @@ public class CircularMenuView extends View {
             R.drawable.cellular_network,
             R.drawable.end_call,
             R.drawable.high_connection,
-            R.drawable.missed_call,
+            //      R.drawable.missed_call,
             R.drawable.mms
+
     };
     private Drawable drawable;
-    private int selectedSector = 1;
+    private int selectedSector = -1;
 
 
     public CircularMenuView(Context context) {
@@ -59,7 +55,7 @@ public class CircularMenuView extends View {
         init();
     }
 
-    public int getArcAngle() {
+    public float getArcAngle() {
         return arcAngle;
     }
 
@@ -67,29 +63,19 @@ public class CircularMenuView extends View {
         this.arcAngle = arcAngle;
     }
 
-    @TargetApi(Build.VERSION_CODES.JELLY_BEAN)
-    private void init() {
-        Log.d("TAG", "init in view");
-        sectorPaint = new Paint();
-
-        sectorPaint.setColor(Color.RED);
-        sectorPaint.setAntiAlias(true);
-        sectorPaint.setStyle(Paint.Style.FILL);
-        sectorPaint.setStrokeWidth(1);
-        sectorCount = 7;
-        arcAngle = 360 / sectorCount;
-    }
-
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
         Log.d("TAG", "onDraw()");
-       // drawSectors(canvas);
+        drawSectors(canvas);
         drawLines(canvas);
         drawCenter(canvas);
         drawArks(canvas);
         drawIcons(canvas);
-        //  highlightSelectedSector(canvas);
+        if(selectedSector > -1){
+            highlightSelectedSector(canvas, selectedSector);
+        }
+        drawCenter(canvas);
 
     }
 
@@ -103,42 +89,32 @@ public class CircularMenuView extends View {
         for (int i = 0; i < sectorCount; i++) {
             drawable = ContextCompat.getDrawable(context, images[i]);
             drawable.setBounds(leftStart, topStart, leftEnd, topEnd);
-            Log.d("TAG", "centerX = " + centerX + "  centerY = " + centerY);
             drawable.draw(canvas);
             canvas.rotate(arcAngle, centerX, centerY);
         }
     }
 
     private void drawLines(Canvas canvas) {
-//        sectorPaint.setColor(Color.RED);
-//        sectorPaint.setStyle(Paint.Style.STROKE);
-//        sectorPaint.setStrokeWidth(3);
-        for (int i = 0; i < sectorCount - 5; i++) {
+        sectorPaint.setColor(Color.RED);
+        sectorPaint.setStyle(Paint.Style.STROKE);
+        sectorPaint.setStrokeWidth(3);
 
-            int startAngleLines = i * arcAngle;
-            int endAngleLines = startAngleLines + arcAngle;
-
-            sectorPaint.setColor(Color.GRAY);
-            sectorPaint.setAntiAlias(true);
-            sectorPaint.setStyle(Paint.Style.FILL);
-
-            canvas.drawArc(arcBounds, startAngleLines, startAngleLines + arcAngle, true, sectorPaint);
-
-            sectorPaint.setColor(Color.RED);
-            sectorPaint.setStyle(Paint.Style.STROKE);
-            sectorPaint.setStrokeWidth(3);
-            drawLine(canvas, endAngleLines, i);
+        for (int i = 0; i < sectorCount; i++) {
+            float startAngle = i * arcAngle;
+            float endAngle = startAngle + arcAngle;
+            float x = (float) ((r - 10) * Math.cos(Math.toRadians(endAngle))) / 2;
+            float y = (float) ((r - 10) * Math.sin(Math.toRadians(endAngle))) / 2;
+            canvas.drawLine(arcBounds.centerX(), arcBounds.centerY(), arcBounds.centerX() + x, arcBounds.centerY() + y, sectorPaint);
         }
     }
 
     private void drawSectors(Canvas canvas) {
         sectorPaint.setColor(Color.GRAY);
-        sectorPaint.setAntiAlias(true);
         sectorPaint.setStyle(Paint.Style.FILL);
-        RectF bounds = new RectF(arcBounds.left + 5, arcBounds.top + 5, arcBounds.right - 5, arcBounds.bottom - 5);
-        for (int i = 0; i <= sectorCount; i++) {
-            int startAngle = i * arcAngle;
-            canvas.drawArc(bounds, startAngle, startAngle + arcAngle, true, sectorPaint);
+
+        for (int i = 0; i < sectorCount; i++) {
+            float startAngle = i * arcAngle;
+            canvas.drawArc(arcBounds, startAngle, arcAngle, true, sectorPaint);
         }
     }
 
@@ -162,17 +138,9 @@ public class CircularMenuView extends View {
         canvas.drawArc(bounds, 0, 360, false, sectorPaint);
     }
 
-    private void highlightSelectedSector(Canvas canvas) {
-        if (selectedSector > 0) {
-            sectorPaint.setColor(Color.GREEN);
-            sectorPaint.setStyle(Paint.Style.FILL);
-            canvas.drawArc(arcBounds, arcAngle * selectedSector, arcAngle * (selectedSector + 1), true, sectorPaint);
-        }
-    }
-
     private void drawLine(Canvas canvas, int endAngle, int pos) {
-        float x = (float) ((r - 10) * Math.cos(Math.toRadians(360 - endAngle - arcAngle / 4))) / 2;
-        float y = (float) ((r - 10) * Math.sin(Math.toRadians(360 - endAngle - arcAngle / 4))) / 2;
+        float x = (float) ((r - 10) * Math.cos(Math.toRadians(endAngle))) / 2;
+        float y = (float) ((r - 10) * Math.sin(Math.toRadians(endAngle))) / 2;
         canvas.drawLine(arcBounds.centerX(), arcBounds.centerY(), arcBounds.centerX() + x, arcBounds.centerY() + y, sectorPaint);
     }
 
@@ -197,14 +165,72 @@ public class CircularMenuView extends View {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
     }
 
-    public void setPieRotation(int pieRotation) {
-        this.pieRotation = pieRotation;
+
+   // methods to highlight sector
+
+    @TargetApi(Build.VERSION_CODES.JELLY_BEAN)
+    private void init() {
+        Log.d("TAG", "init in view");
+        sectorPaint = new Paint();
+        sectorPaint.setColor(Color.RED);
+        sectorPaint.setAntiAlias(true);
+        sectorPaint.setStyle(Paint.Style.FILL);
+        sectorPaint.setStrokeWidth(1);
+        sectorCount = images.length;
+        arcAngle = 360 / (float) sectorCount;
+        setRotation(arcAngle+ 30);
     }
 
-    public int getPieRotation() {
-        return pieRotation;
+    private void highlightSelectedSector(Canvas canvas, int pos) {
+        Log.d("TAG", "highlightSelectedSector() pos: ");
+        sectorPaint.setColor(Color.GREEN);
+        sectorPaint.setStyle(Paint.Style.FILL);
+        float rotation = getRotation();
+        int rotatedSectors = (int) (rotation/arcAngle);
+        float startAngle = (pos - rotatedSectors) * arcAngle;
+        canvas.drawArc(arcBounds, startAngle, arcAngle, true, sectorPaint);
     }
 
+    private int getSectorOfAngle(float angle) {
+
+        Log.d("TAG", " raw angle: " + angle);
+        Log.d("TAG", " rotation: " + getRotation());
+
+        float checkAngle = Math.abs(arcAngle - 360);
+
+        for (int i = 0; i <= sectorCount; i++) {
+            if (angle  > checkAngle) {
+                return i;
+            }
+            checkAngle = Math.abs(checkAngle - arcAngle);
+            Log.d("TAG", " checkAngle: " + checkAngle);
+        }
+        return sectorCount;
+    }
+
+    private float getAngleOfPoint(float x, float y) {
+        float angleRad = (float) Math.atan2((double) (y - centerY), (double) (x - centerX));
+        float theta = (float) Math.toDegrees(angleRad);
+        float angleDegrees = theta;
+        if (theta < 0.0) {
+            angleDegrees = 360 + theta;
+        }
+        return angleDegrees;
+    }
+
+
+    public int getSector(float x, float y){
+        if(touchOnView(x, y)){
+            int sectorNumber = getSectorOfAngle(getAngleOfPoint(x, y));
+                return Math.abs(sectorNumber - sectorCount +1);
+        }
+        return -1;
+    }
+
+    private boolean touchOnView(float x, float y){
+        float radius = (float) Math.sqrt(Math.pow((x - centerX), 2) + Math.pow((y - centerY), 2)) * 2;
+        return (radius < r);
+    }
 
     public int getCenterX() {
         return centerX;
@@ -218,5 +244,7 @@ public class CircularMenuView extends View {
         setRotation(angle);
     }
 
-
+    public void setSelectedSector(int selectedSector) {
+        this.selectedSector = selectedSector;
+    }
 }

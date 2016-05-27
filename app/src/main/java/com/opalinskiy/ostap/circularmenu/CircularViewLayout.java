@@ -71,19 +71,17 @@ public class CircularViewLayout extends ViewGroup {
         super.onSizeChanged(w, h, oldw, oldh);
         int diameter = Math.min(w, h);
         pieView.layout(0, 0, diameter, diameter);
-        Log.d("TAG", "diameter from view.layout()" + diameter);
+    //    Log.d("TAG", "diameter from view.layout()" + diameter);
     }
 
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
-        Log.d("TAG", "onDraw in layout");
+      //  Log.d("TAG", "onDraw in layout");
     }
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
-        Log.d("TAG", "onTouch()");
-      //  pieView.invalidate();
         boolean result = detector.onTouchEvent(event);
         return result;
     }
@@ -91,7 +89,6 @@ public class CircularViewLayout extends ViewGroup {
     private class GestureListener extends GestureDetector.SimpleOnGestureListener {
         @Override
         public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX, float distanceY) {
-            Log.d("TAG", "onScroll()");
             // Set the pie rotation directly.
             float scrollTheta = vectorToScalarScroll(
                     distanceX, distanceY,
@@ -120,7 +117,18 @@ public class CircularViewLayout extends ViewGroup {
 
         @Override
         public boolean onDown(MotionEvent e) {
-            Log.d("TAG", "onDown()");
+        //    Log.d("TAG", "onDown()");
+            //  pieView.invalidate();
+            float x = e.getX();
+            float y = e.getY();
+            int sectorNumber = pieView.getSector(x, y);
+
+          //  Log.d("TAG", " SECTOR NUMBER RESULT: " + sectorNumber);
+
+            if(sectorNumber > -1){
+                pieView.setSelectedSector(sectorNumber);
+                pieView.invalidate();
+            }
             return true;
         }
     }
