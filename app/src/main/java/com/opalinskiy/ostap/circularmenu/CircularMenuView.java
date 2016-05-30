@@ -156,10 +156,10 @@ public class CircularMenuView extends View {
     @Override
     protected void onSizeChanged(int w, int h, int oldw, int oldh) {
         r = Math.min(w, h);
-        Log.d("TAG", "onSizeChange in view");
+//        Log.d("TAG", "onSizeChange in view");
         arcBounds = new RectF(0, 0, r, r);
-        Log.d("TAG", "Width from view onSizeChanged: " + w);
-        Log.d("TAG", "Height from view onSizeChanged: " + h);
+//        Log.d("TAG", "Width from view onSizeChanged: " + w);
+//        Log.d("TAG", "Height from view onSizeChanged: " + h);
 
         centerX = (int) arcBounds.centerX();
         centerY = (int) arcBounds.centerY();
@@ -186,6 +186,7 @@ public class CircularMenuView extends View {
         sectorPaint.setStrokeWidth(1);
         sectorCount = images.length;
         arcAngle = 360 / (float) sectorCount;
+        //setRotation(137);
 
         detector = new GestureDetector(getContext(), new GestureListener());
         scroller = new Scroller(getContext(), null, true);
@@ -198,13 +199,11 @@ public class CircularMenuView extends View {
     }
 
     private void highlightSelectedSector(Canvas canvas, int pos) {
-        Log.d("TAG", "highlightSelectedSector() pos: ");
+     //   Log.d("TAG", "highlightSelectedSector() pos: ");
         sectorPaint.setColor(Color.GREEN);
         sectorPaint.setStyle(Paint.Style.FILL);
-        float rotation = getRotation();
-        int rotatedSectors = (int) (rotation/arcAngle);
-        float startAngle = (pos - rotatedSectors) * arcAngle;
-        canvas.drawArc(arcBounds, startAngle, arcAngle, true, sectorPaint);
+        float startAngle = pos * arcAngle;
+        canvas.drawArc(arcBounds,startAngle, arcAngle, true, sectorPaint);
     }
 
     private int getSectorOfAngle(float angle) {
@@ -219,7 +218,7 @@ public class CircularMenuView extends View {
                 return i;
             }
             checkAngle = Math.abs(checkAngle - arcAngle);
-            Log.d("TAG", " checkAngle: " + checkAngle);
+         //   Log.d("TAG", " checkAngle: " + checkAngle);
         }
         return sectorCount;
     }
