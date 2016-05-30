@@ -263,19 +263,6 @@ public class CircularMenuView extends View {
         this.selectedSector = selectedSector;
     }
 
-
-
-
-
-
-
-
-
-
-
-
-
-    
     @Override
     public boolean onTouchEvent(MotionEvent event) {
         boolean result = detector.onTouchEvent(event);
@@ -293,7 +280,7 @@ public class CircularMenuView extends View {
                     distanceX, distanceY,
                     e2.getX() - centerX,
                     e2.getY() - centerY);
-            rotateTo(getRotation() - (int) scrollTheta / 4);
+            rotateTo(getRotation() - (int) scrollTheta / 3);
             return true;
         }
 
