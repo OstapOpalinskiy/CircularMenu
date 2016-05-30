@@ -44,6 +44,7 @@ public class CircularMenuView extends View {
     };
     private Drawable drawable;
     private int selectedSector = -1;
+    private int ANIMATE_TO_CENETER_SPEED = 500;
 
     public CircularMenuView(Context context) {
         super(context);
@@ -174,7 +175,7 @@ public class CircularMenuView extends View {
     private void highlightSelectedSector(Canvas canvas, int pos) {
         sectorPaint.setColor(Color.GREEN);
         sectorPaint.setStyle(Paint.Style.FILL);
-       // sectorPaint.setShader(new LinearGradient(0, 0, 0, r, Color.GRAY, Color.GREEN, Shader.TileMode.MIRROR));
+        // sectorPaint.setShader(new LinearGradient(0, 0, 0, r, Color.GRAY, Color.GREEN, Shader.TileMode.MIRROR));
         float startAngle = pos * arcAngle;
         canvas.drawArc(arcBounds, startAngle, arcAngle, true, sectorPaint);
     }
@@ -224,36 +225,10 @@ public class CircularMenuView extends View {
         this.selectedSector = selectedSector;
     }
 
-   // methods for scroll and fling
+    // methods for scroll and fling
     @Override
     public boolean onTouchEvent(MotionEvent event) {
         boolean result = detector.onTouchEvent(event);
-        float x = event.getX();
-        float y = event.getY();
-//        Log.d("TAG", "x: " + x + " ,y: " + y);
-        switch (getSector(x, y)){
-            case 0:
-                Toast.makeText(getContext(), R.string.callback, Toast.LENGTH_SHORT).show();
-                break;
-            case 1:
-                Toast.makeText(getContext(), R.string.cellular_network, Toast.LENGTH_SHORT).show();
-                break;
-            case 2:
-                Toast.makeText(getContext(), R.string.end_call, Toast.LENGTH_SHORT).show();
-                break;
-            case 3:
-                Toast.makeText(getContext(), R.string.high_connection, Toast.LENGTH_SHORT).show();
-                break;
-            case 4:
-                Toast.makeText(getContext(), R.string.mms, Toast.LENGTH_SHORT).show();
-                break;
-            case 5:
-                Toast.makeText(getContext(), R.string.bluetooth, Toast.LENGTH_SHORT).show();
-                break;
-            case 6:
-                Toast.makeText(getContext(), R.string.call_transfer, Toast.LENGTH_SHORT).show();
-                break;
-        }
         return result;
     }
 
@@ -287,15 +262,50 @@ public class CircularMenuView extends View {
 
         @Override
         public boolean onDown(MotionEvent e) {
+            return true;
+        }
+
+        @Override
+        public boolean onSingleTapUp(MotionEvent e) {
             float x = e.getX();
             float y = e.getY();
-            int sectorNumber = getSector(x, y);
+            selectedSector = getSector(x, y);
+            setActionSelectedSector();
+            invalidate();
+            return super.onSingleTapUp(e);
+        }
+    }
 
-            if (sectorNumber > -1) {
-                setSelectedSector(sectorNumber);
-                invalidate();
-            }
-            return true;
+    private void setActionSelectedSector() {
+        switch (selectedSector) {
+            case 0:
+                Toast.makeText(getContext(), R.string.callback, Toast.LENGTH_SHORT).show();
+                animate().rotation(arcAngle * 5 - arcAngle / 4).setDuration(ANIMATE_TO_CENETER_SPEED);
+                break;
+            case 1:
+                Toast.makeText(getContext(), R.string.cellular_network, Toast.LENGTH_SHORT).show();
+                animate().rotation(arcAngle * 4 - arcAngle / 4).setDuration(ANIMATE_TO_CENETER_SPEED);
+                break;
+            case 2:
+                Toast.makeText(getContext(), R.string.end_call, Toast.LENGTH_SHORT).show();
+                animate().rotation(arcAngle * 3 - arcAngle / 4).setDuration(ANIMATE_TO_CENETER_SPEED);
+                break;
+            case 3:
+                Toast.makeText(getContext(), R.string.high_connection, Toast.LENGTH_SHORT).show();
+                animate().rotation(arcAngle * 2 - arcAngle / 4).setDuration(ANIMATE_TO_CENETER_SPEED);
+                break;
+            case 4:
+                Toast.makeText(getContext(), R.string.mms, Toast.LENGTH_SHORT).show();
+                animate().rotation(arcAngle - arcAngle / 4).setDuration(ANIMATE_TO_CENETER_SPEED);
+                break;
+            case 5:
+                Toast.makeText(getContext(), R.string.bluetooth, Toast.LENGTH_SHORT).show();
+                animate().rotation(-arcAngle / 4).setDuration(ANIMATE_TO_CENETER_SPEED);
+                break;
+            case 6:
+                Toast.makeText(getContext(), R.string.call_transfer, Toast.LENGTH_SHORT).show();
+                animate().rotation(-arcAngle - arcAngle / 4).setDuration(ANIMATE_TO_CENETER_SPEED);
+                break;
         }
     }
 
