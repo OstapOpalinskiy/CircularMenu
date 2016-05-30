@@ -280,7 +280,7 @@ public class CircularMenuView extends View {
                     distanceX, distanceY,
                     e2.getX() - centerX,
                     e2.getY() - centerY);
-            rotateTo(getRotation() - (int) scrollTheta / 3);
+            rotateTo(getRotation() - (int) scrollTheta / 4);
             return true;
         }
 
@@ -327,7 +327,6 @@ public class CircularMenuView extends View {
 
         float dot = (crossX * dx + crossY * dy);
         float sign = Math.signum(dot);
-
         return l * sign;
     }
 
