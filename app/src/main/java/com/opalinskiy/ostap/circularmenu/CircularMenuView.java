@@ -339,5 +339,4 @@ public class CircularMenuView extends View {
             scrollAnimator.cancel();
         }
     }
-
 }
