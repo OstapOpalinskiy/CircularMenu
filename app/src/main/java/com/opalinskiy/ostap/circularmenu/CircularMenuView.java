@@ -6,6 +6,7 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.LinearGradient;
 import android.graphics.Paint;
+import android.graphics.RadialGradient;
 import android.graphics.RectF;
 import android.graphics.Shader;
 import android.graphics.drawable.Drawable;
@@ -26,10 +27,26 @@ public class CircularMenuView extends View {
     private ValueAnimator scrollAnimator;
     private Context context;
     private Paint sectorPaint;
+    private Paint linePaint;
+    private Paint centerPaintBig;
+    private Paint centerPaintSmall;
+    private Paint arcPaint;
+
     private RectF arcBounds;
     private int sectorCount;
     private float arcAngle;
     private int r;
+
+    int arkStroke;
+    int arcColor;
+    int lineStroke;
+    int lineColor;
+    int sectorColor;
+    int highlightedSectorColor;
+    int smallCenterColor;
+    int bigCenterColor;
+
+
     int centerX;
     int centerY;
     private int[] images = {
@@ -44,7 +61,7 @@ public class CircularMenuView extends View {
     };
     private Drawable drawable;
     private int selectedSector = -1;
-    private int ANIMATE_TO_CENETER_SPEED = 500;
+    private int ANIMATE_TO_CENTER_SPEED = 500;
 
     public CircularMenuView(Context context) {
         super(context);
@@ -63,26 +80,41 @@ public class CircularMenuView extends View {
         init();
     }
 
+    // methods to highlight sector
+    private void init() {
+        Log.d("TAG", "init in view");
+        sectorCount = images.length;
+        arcAngle = 360 / (float) sectorCount;
+        detector = new GestureDetector(getContext(), new GestureListener());
+        scroller = new Scroller(getContext(), null, true);
+        scrollAnimator = ValueAnimator.ofFloat(0, 1);
+        scrollAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+            public void onAnimationUpdate(ValueAnimator valueAnimator) {
+                tickScrollAnimation();
+            }
+        });
+    }
+
+
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
         Log.d("TAG", "onDraw()");
         drawSectors(canvas);
         drawLines(canvas);
-        drawCenter(canvas);
         drawArks(canvas);
         drawIcons(canvas);
+
         if (selectedSector > -1) {
             highlightSelectedSector(canvas, selectedSector);
         }
         drawCenter(canvas);
-
     }
 
     private void drawIcons(Canvas canvas) {
-        int leftStart = (int) (centerX - (r * 0.07));
+        int leftStart = (int) (centerX - r * 0.02);
         int topStart = (int) (centerY - r * 0.4);
-        int leftEnd = (int) (centerX + (r * 0.07));
+        int leftEnd = (int) (centerX + r * 0.12);
         int topEnd = (int) (centerY - r * 0.26);
 
         for (int i = 0; i < sectorCount; i++) {
@@ -94,22 +126,17 @@ public class CircularMenuView extends View {
     }
 
     private void drawLines(Canvas canvas) {
-        sectorPaint.setColor(Color.RED);
-        sectorPaint.setStyle(Paint.Style.STROKE);
-        sectorPaint.setStrokeWidth(3);
+
         for (int i = 0; i < sectorCount; i++) {
             float startAngle = i * arcAngle;
             float endAngle = startAngle + arcAngle;
             float x = (float) ((r - 10) * Math.cos(Math.toRadians(endAngle))) / 2;
             float y = (float) ((r - 10) * Math.sin(Math.toRadians(endAngle))) / 2;
-            canvas.drawLine(arcBounds.centerX(), arcBounds.centerY(), arcBounds.centerX() + x, arcBounds.centerY() + y, sectorPaint);
+            canvas.drawLine(arcBounds.centerX(), arcBounds.centerY(), arcBounds.centerX() + x, arcBounds.centerY() + y, linePaint);
         }
     }
 
     private void drawSectors(Canvas canvas) {
-        sectorPaint.setColor(Color.GRAY);
-        sectorPaint.setStyle(Paint.Style.FILL);
-
         for (int i = 0; i < sectorCount; i++) {
             float startAngle = i * arcAngle;
             canvas.drawArc(arcBounds, startAngle, arcAngle, true, sectorPaint);
@@ -117,23 +144,15 @@ public class CircularMenuView extends View {
     }
 
     private void drawCenter(Canvas canvas) {
-        sectorPaint.setAntiAlias(true);
-        sectorPaint.setStyle(Paint.Style.FILL);
-        sectorPaint.setColor(Color.GREEN);
-
-        canvas.drawCircle(arcBounds.centerX(), arcBounds.centerY(), r / 10, sectorPaint);
-        sectorPaint.setColor(Color.YELLOW);
-        canvas.drawCircle(arcBounds.centerX(), arcBounds.centerY(), r / 15, sectorPaint);
+        canvas.drawCircle(arcBounds.centerX(), arcBounds.centerY(), r / 8, centerPaintBig);
+        canvas.drawCircle(arcBounds.centerX(), arcBounds.centerY(), r / 12, centerPaintSmall);
+        sectorPaint.setShader(null);
     }
 
     private void drawArks(Canvas canvas) {
-        sectorPaint.setColor(Color.RED);
-        sectorPaint.setStyle(Paint.Style.STROKE);
-        sectorPaint.setStrokeWidth(7);
-
         RectF bounds = new RectF(arcBounds.left + 5, arcBounds.top + 5, arcBounds.right - 4, arcBounds.bottom - 4);
-
-        canvas.drawArc(bounds, 0, 360, false, sectorPaint);
+        canvas.drawArc(bounds, 0, 360, false, arcPaint);
+        sectorPaint.setShader(null);
     }
 
     @Override
@@ -144,6 +163,7 @@ public class CircularMenuView extends View {
         centerY = (int) arcBounds.centerY();
         setPivotX(centerX);
         setPivotY(centerY);
+        setPaints();
     }
 
     @Override
@@ -151,33 +171,18 @@ public class CircularMenuView extends View {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
     }
 
-    // methods to highlight sector
-    private void init() {
-        Log.d("TAG", "init in view");
-        sectorPaint = new Paint();
-        sectorPaint.setColor(Color.RED);
-        sectorPaint.setAntiAlias(true);
-        sectorPaint.setStyle(Paint.Style.FILL);
-        sectorPaint.setStrokeWidth(1);
-        sectorCount = images.length;
-        arcAngle = 360 / (float) sectorCount;
-
-        detector = new GestureDetector(getContext(), new GestureListener());
-        scroller = new Scroller(getContext(), null, true);
-        scrollAnimator = ValueAnimator.ofFloat(0, 1);
-        scrollAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
-            public void onAnimationUpdate(ValueAnimator valueAnimator) {
-                tickScrollAnimation();
-            }
-        });
-    }
-
     private void highlightSelectedSector(Canvas canvas, int pos) {
         sectorPaint.setColor(Color.GREEN);
         sectorPaint.setStyle(Paint.Style.FILL);
-        // sectorPaint.setShader(new LinearGradient(0, 0, 0, r, Color.GRAY, Color.GREEN, Shader.TileMode.MIRROR));
+        sectorPaint.setShader(new RadialGradient(centerX, centerY, 2 * r, Color.GREEN, Color.BLACK, Shader.TileMode.MIRROR));
+
         float startAngle = pos * arcAngle;
         canvas.drawArc(arcBounds, startAngle, arcAngle, true, sectorPaint);
+
+        sectorPaint.setAntiAlias(true);
+        sectorPaint.setColor(Color.GRAY);
+        sectorPaint.setStyle(Paint.Style.FILL);
+        sectorPaint.setShader(null);
     }
 
     private int getSectorOfAngle(float angle) {
@@ -221,9 +226,6 @@ public class CircularMenuView extends View {
         setRotation(angle);
     }
 
-    public void setSelectedSector(int selectedSector) {
-        this.selectedSector = selectedSector;
-    }
 
     // methods for scroll and fling
     @Override
@@ -252,7 +254,7 @@ public class CircularMenuView extends View {
                     e2.getY() - centerY);
 
             scroller.fling(0, (int) getRotation(),
-                    0, (int) scrollTheta / 8,
+                    0, (int) scrollTheta / 7,
                     0, 0, Integer.MIN_VALUE, Integer.MAX_VALUE);
 
             scrollAnimator.setDuration(scroller.getDuration());
@@ -280,31 +282,31 @@ public class CircularMenuView extends View {
         switch (selectedSector) {
             case 0:
                 Toast.makeText(getContext(), R.string.callback, Toast.LENGTH_SHORT).show();
-                animate().rotation(arcAngle * 5 - arcAngle / 4).setDuration(ANIMATE_TO_CENETER_SPEED);
+                animate().rotation(arcAngle * 5 - arcAngle / 4).setDuration(ANIMATE_TO_CENTER_SPEED);
                 break;
             case 1:
                 Toast.makeText(getContext(), R.string.cellular_network, Toast.LENGTH_SHORT).show();
-                animate().rotation(arcAngle * 4 - arcAngle / 4).setDuration(ANIMATE_TO_CENETER_SPEED);
+                animate().rotation(arcAngle * 4 - arcAngle / 4).setDuration(ANIMATE_TO_CENTER_SPEED);
                 break;
             case 2:
                 Toast.makeText(getContext(), R.string.end_call, Toast.LENGTH_SHORT).show();
-                animate().rotation(arcAngle * 3 - arcAngle / 4).setDuration(ANIMATE_TO_CENETER_SPEED);
+                animate().rotation(arcAngle * 3 - arcAngle / 4).setDuration(ANIMATE_TO_CENTER_SPEED);
                 break;
             case 3:
                 Toast.makeText(getContext(), R.string.high_connection, Toast.LENGTH_SHORT).show();
-                animate().rotation(arcAngle * 2 - arcAngle / 4).setDuration(ANIMATE_TO_CENETER_SPEED);
+                animate().rotation(arcAngle * 2 - arcAngle / 4).setDuration(ANIMATE_TO_CENTER_SPEED);
                 break;
             case 4:
                 Toast.makeText(getContext(), R.string.mms, Toast.LENGTH_SHORT).show();
-                animate().rotation(arcAngle - arcAngle / 4).setDuration(ANIMATE_TO_CENETER_SPEED);
+                animate().rotation(arcAngle - arcAngle / 4).setDuration(ANIMATE_TO_CENTER_SPEED);
                 break;
             case 5:
                 Toast.makeText(getContext(), R.string.bluetooth, Toast.LENGTH_SHORT).show();
-                animate().rotation(-arcAngle / 4).setDuration(ANIMATE_TO_CENETER_SPEED);
+                animate().rotation(-arcAngle / 4).setDuration(ANIMATE_TO_CENTER_SPEED);
                 break;
             case 6:
                 Toast.makeText(getContext(), R.string.call_transfer, Toast.LENGTH_SHORT).show();
-                animate().rotation(-arcAngle - arcAngle / 4).setDuration(ANIMATE_TO_CENETER_SPEED);
+                animate().rotation(-arcAngle - arcAngle / 4).setDuration(ANIMATE_TO_CENTER_SPEED);
                 break;
         }
     }
@@ -327,4 +329,36 @@ public class CircularMenuView extends View {
             scrollAnimator.cancel();
         }
     }
+
+    private void setPaints() {
+        sectorPaint = new Paint();
+        sectorPaint.setAntiAlias(true);
+        sectorPaint.setColor(Color.GRAY);
+        sectorPaint.setStyle(Paint.Style.FILL);
+
+        linePaint = new Paint();
+        linePaint.setColor(Color.RED);
+        linePaint.setAntiAlias(true);
+        linePaint.setStyle(Paint.Style.STROKE);
+        linePaint.setStrokeWidth(6);
+
+        arcPaint = new Paint();
+        arcPaint.setColor(Color.RED);
+        arcPaint.setAntiAlias(true);
+        arcPaint.setStyle(Paint.Style.STROKE);
+        arcPaint.setStrokeWidth(7);
+
+        centerPaintSmall = new Paint();
+        centerPaintSmall.setAntiAlias(true);
+        centerPaintSmall.setColor(Color.YELLOW);
+        centerPaintSmall.setShader(new RadialGradient(centerX, centerY, r / 4, Color.YELLOW,
+                Color.GRAY, Shader.TileMode.MIRROR));
+
+        centerPaintBig = new Paint();
+        centerPaintBig.setAntiAlias(true);
+        centerPaintBig.setStyle(Paint.Style.FILL);
+        centerPaintBig.setColor(Color.GREEN);
+        centerPaintBig.setShader(new RadialGradient(centerX, centerY, r / 6, Color.GREEN, Color.GRAY, Shader.TileMode.MIRROR));
+    }
+
 }

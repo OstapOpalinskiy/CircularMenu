@@ -6,9 +6,7 @@ import android.util.AttributeSet;
 import android.util.Log;
 import android.view.ViewGroup;
 
-/**
- * Created by Evronot on 24.05.2016.
- */
+
 public class CircularViewLayout extends ViewGroup {
     private CircularMenuView pieView;
 
@@ -41,10 +39,10 @@ public class CircularViewLayout extends ViewGroup {
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         Log.d("TAG", "onMeasure in layout");
-        int minw = getPaddingLeft() + getPaddingRight() + getSuggestedMinimumWidth();
-        int w = Math.max(minw, MeasureSpec.getSize(widthMeasureSpec));
-        int minh = w + getPaddingBottom() + getPaddingTop();
-        int h = Math.min(MeasureSpec.getSize(heightMeasureSpec), minh);
+        int minWidth = getPaddingLeft() + getPaddingRight() + getSuggestedMinimumWidth();
+        int w = Math.max(minWidth, MeasureSpec.getSize(widthMeasureSpec));
+        int minHeight = w + getPaddingBottom() + getPaddingTop();
+        int h = Math.min(MeasureSpec.getSize(heightMeasureSpec), minHeight);
         setMeasuredDimension(w, h);
     }
 
