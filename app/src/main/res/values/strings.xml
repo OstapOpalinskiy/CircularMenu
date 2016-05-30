@@ -1,3 +1,10 @@
 <resources>
     <string name="app_name">CircularMenu</string>
+    <string name="callback">callback</string>
+    <string name="cellular_network">cellular network</string>
+    <string name="end_call">end call</string>
+    <string name="high_connection">high connection</string>
+    <string name="mms">mms</string>
+    <string name="bluetooth">bluetooth</string>
+    <string name="call_transfer">call transfer</string>
 </resources>

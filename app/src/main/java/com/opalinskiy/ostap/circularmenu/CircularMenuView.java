@@ -1,14 +1,14 @@
 package com.opalinskiy.ostap.circularmenu;
 
 import android.animation.ValueAnimator;
-import android.annotation.TargetApi;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.LinearGradient;
 import android.graphics.Paint;
 import android.graphics.RectF;
+import android.graphics.Shader;
 import android.graphics.drawable.Drawable;
-import android.os.Build;
 import android.support.v4.content.ContextCompat;
 import android.util.AttributeSet;
 import android.util.Log;
@@ -16,13 +16,14 @@ import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Scroller;
+import android.widget.Toast;
 
 
 public class CircularMenuView extends View {
+
     private GestureDetector detector;
     private Scroller scroller;
     private ValueAnimator scrollAnimator;
-
     private Context context;
     private Paint sectorPaint;
     private RectF arcBounds;
@@ -40,11 +41,9 @@ public class CircularMenuView extends View {
             R.drawable.high_connection,
             //      R.drawable.missed_call,
             R.drawable.mms
-
     };
     private Drawable drawable;
     private int selectedSector = -1;
-
 
     public CircularMenuView(Context context) {
         super(context);
@@ -63,14 +62,6 @@ public class CircularMenuView extends View {
         init();
     }
 
-    public float getArcAngle() {
-        return arcAngle;
-    }
-
-    public void setArcAngle(int arcAngle) {
-        this.arcAngle = arcAngle;
-    }
-
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
@@ -80,7 +71,7 @@ public class CircularMenuView extends View {
         drawCenter(canvas);
         drawArks(canvas);
         drawIcons(canvas);
-        if(selectedSector > -1){
+        if (selectedSector > -1) {
             highlightSelectedSector(canvas, selectedSector);
         }
         drawCenter(canvas);
@@ -88,7 +79,6 @@ public class CircularMenuView extends View {
     }
 
     private void drawIcons(Canvas canvas) {
-
         int leftStart = (int) (centerX - (r * 0.07));
         int topStart = (int) (centerY - r * 0.4);
         int leftEnd = (int) (centerX + (r * 0.07));
@@ -106,7 +96,6 @@ public class CircularMenuView extends View {
         sectorPaint.setColor(Color.RED);
         sectorPaint.setStyle(Paint.Style.STROKE);
         sectorPaint.setStrokeWidth(3);
-
         for (int i = 0; i < sectorCount; i++) {
             float startAngle = i * arcAngle;
             float endAngle = startAngle + arcAngle;
@@ -146,24 +135,12 @@ public class CircularMenuView extends View {
         canvas.drawArc(bounds, 0, 360, false, sectorPaint);
     }
 
-    private void drawLine(Canvas canvas, int endAngle, int pos) {
-        float x = (float) ((r - 10) * Math.cos(Math.toRadians(endAngle))) / 2;
-        float y = (float) ((r - 10) * Math.sin(Math.toRadians(endAngle))) / 2;
-        canvas.drawLine(arcBounds.centerX(), arcBounds.centerY(), arcBounds.centerX() + x, arcBounds.centerY() + y, sectorPaint);
-    }
-
-
     @Override
     protected void onSizeChanged(int w, int h, int oldw, int oldh) {
         r = Math.min(w, h);
-//        Log.d("TAG", "onSizeChange in view");
         arcBounds = new RectF(0, 0, r, r);
-//        Log.d("TAG", "Width from view onSizeChanged: " + w);
-//        Log.d("TAG", "Height from view onSizeChanged: " + h);
-
         centerX = (int) arcBounds.centerX();
         centerY = (int) arcBounds.centerY();
-
         setPivotX(centerX);
         setPivotY(centerY);
     }
@@ -173,10 +150,7 @@ public class CircularMenuView extends View {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
     }
 
-
-   // methods to highlight sector
-
-    @TargetApi(Build.VERSION_CODES.JELLY_BEAN)
+    // methods to highlight sector
     private void init() {
         Log.d("TAG", "init in view");
         sectorPaint = new Paint();
@@ -186,7 +160,6 @@ public class CircularMenuView extends View {
         sectorPaint.setStrokeWidth(1);
         sectorCount = images.length;
         arcAngle = 360 / (float) sectorCount;
-        //setRotation(137);
 
         detector = new GestureDetector(getContext(), new GestureListener());
         scroller = new Scroller(getContext(), null, true);
@@ -199,26 +172,23 @@ public class CircularMenuView extends View {
     }
 
     private void highlightSelectedSector(Canvas canvas, int pos) {
-     //   Log.d("TAG", "highlightSelectedSector() pos: ");
         sectorPaint.setColor(Color.GREEN);
         sectorPaint.setStyle(Paint.Style.FILL);
+       // sectorPaint.setShader(new LinearGradient(0, 0, 0, r, Color.GRAY, Color.GREEN, Shader.TileMode.MIRROR));
         float startAngle = pos * arcAngle;
-        canvas.drawArc(arcBounds,startAngle, arcAngle, true, sectorPaint);
+        canvas.drawArc(arcBounds, startAngle, arcAngle, true, sectorPaint);
     }
 
     private int getSectorOfAngle(float angle) {
-
         Log.d("TAG", " raw angle: " + angle);
         Log.d("TAG", " rotation: " + getRotation());
-
         float checkAngle = Math.abs(arcAngle - 360);
 
         for (int i = 0; i <= sectorCount; i++) {
-            if (angle  > checkAngle) {
+            if (angle > checkAngle) {
                 return i;
             }
             checkAngle = Math.abs(checkAngle - arcAngle);
-         //   Log.d("TAG", " checkAngle: " + checkAngle);
         }
         return sectorCount;
     }
@@ -233,26 +203,17 @@ public class CircularMenuView extends View {
         return angleDegrees;
     }
 
-
-    public int getSector(float x, float y){
-        if(touchOnView(x, y)){
+    public int getSector(float x, float y) {
+        if (touchOnView(x, y)) {
             int sectorNumber = getSectorOfAngle(getAngleOfPoint(x, y));
-                return Math.abs(sectorNumber - sectorCount +1);
+            return Math.abs(sectorNumber - sectorCount + 1);
         }
         return -1;
     }
 
-    private boolean touchOnView(float x, float y){
+    private boolean touchOnView(float x, float y) {
         float radius = (float) Math.sqrt(Math.pow((x - centerX), 2) + Math.pow((y - centerY), 2)) * 2;
         return (radius < r);
-    }
-
-    public int getCenterX() {
-        return centerX;
-    }
-
-    public int getCenterY() {
-        return centerY;
     }
 
     public void rotateTo(float angle) {
@@ -263,19 +224,42 @@ public class CircularMenuView extends View {
         this.selectedSector = selectedSector;
     }
 
+   // methods for scroll and fling
     @Override
     public boolean onTouchEvent(MotionEvent event) {
         boolean result = detector.onTouchEvent(event);
         float x = event.getX();
         float y = event.getY();
-        Log.d("TAG", "x: " + x + " ,y: " + y );
+//        Log.d("TAG", "x: " + x + " ,y: " + y);
+        switch (getSector(x, y)){
+            case 0:
+                Toast.makeText(getContext(), R.string.callback, Toast.LENGTH_SHORT).show();
+                break;
+            case 1:
+                Toast.makeText(getContext(), R.string.cellular_network, Toast.LENGTH_SHORT).show();
+                break;
+            case 2:
+                Toast.makeText(getContext(), R.string.end_call, Toast.LENGTH_SHORT).show();
+                break;
+            case 3:
+                Toast.makeText(getContext(), R.string.high_connection, Toast.LENGTH_SHORT).show();
+                break;
+            case 4:
+                Toast.makeText(getContext(), R.string.mms, Toast.LENGTH_SHORT).show();
+                break;
+            case 5:
+                Toast.makeText(getContext(), R.string.bluetooth, Toast.LENGTH_SHORT).show();
+                break;
+            case 6:
+                Toast.makeText(getContext(), R.string.call_transfer, Toast.LENGTH_SHORT).show();
+                break;
+        }
         return result;
     }
 
     private class GestureListener extends GestureDetector.SimpleOnGestureListener {
         @Override
         public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX, float distanceY) {
-            // Set the pie rotation directly.
             float scrollTheta = vectorToScalarScroll(
                     distanceX, distanceY,
                     e2.getX() - centerX,
@@ -303,16 +287,11 @@ public class CircularMenuView extends View {
 
         @Override
         public boolean onDown(MotionEvent e) {
-            //    Log.d("TAG", "onDown()");
-            //  pieView.invalidate();
             float x = e.getX();
             float y = e.getY();
             int sectorNumber = getSector(x, y);
 
-            //  Log.d("TAG", " SECTOR NUMBER RESULT: " + sectorNumber);
-
-            if(sectorNumber > -1){
-
+            if (sectorNumber > -1) {
                 setSelectedSector(sectorNumber);
                 invalidate();
             }
