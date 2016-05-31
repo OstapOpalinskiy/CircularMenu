@@ -19,6 +19,9 @@ import android.view.View;
 import android.widget.Scroller;
 import android.widget.Toast;
 
+import java.util.LinkedList;
+import java.util.List;
+
 
 public class CircularMenuView extends View {
 
@@ -35,20 +38,20 @@ public class CircularMenuView extends View {
     private RectF arcBounds;
     private int sectorCount;
     private float arcAngle;
+    private float   startAngle;
     private int r;
 
-    int arkStroke;
-    int arcColor;
-    int lineStroke;
-    int lineColor;
-    int sectorColor;
-    int highlightedSectorColor;
-    int smallCenterColor;
-    int bigCenterColor;
+    private int arkStroke;
+    private int arcColor;
+    private int lineStroke;
+    private int lineColor;
+    private int sectorColor;
+    private int highlightedSectorColor;
+    private int smallCenterColor;
+    private int bigCenterColor;
 
-
-    int centerX;
-    int centerY;
+    private int centerX;
+    private int centerY;
     private int[] images = {
             R.drawable.bluetooth,
             R.drawable.call_transfer,
@@ -61,6 +64,7 @@ public class CircularMenuView extends View {
     };
     private Drawable drawable;
     private int selectedSector = -1;
+    private List<Sector> sectorList;
     private int ANIMATE_TO_CENTER_SPEED = 500;
 
     public CircularMenuView(Context context) {
@@ -80,11 +84,12 @@ public class CircularMenuView extends View {
         init();
     }
 
-    // methods to highlight sector
     private void init() {
         Log.d("TAG", "init in view");
         sectorCount = images.length;
         arcAngle = 360 / (float) sectorCount;
+        startAngle = 360 - 90 - arcAngle / 2;
+        sectorList = new LinkedList();
         detector = new GestureDetector(getContext(), new GestureListener());
         scroller = new Scroller(getContext(), null, true);
         scrollAnimator = ValueAnimator.ofFloat(0, 1);
@@ -94,7 +99,6 @@ public class CircularMenuView extends View {
             }
         });
     }
-
 
     @Override
     protected void onDraw(Canvas canvas) {
@@ -112,10 +116,11 @@ public class CircularMenuView extends View {
     }
 
     private void drawIcons(Canvas canvas) {
-        int leftStart = (int) (centerX - r * 0.02);
-        int topStart = (int) (centerY - r * 0.4);
-        int leftEnd = (int) (centerX + r * 0.12);
-        int topEnd = (int) (centerY - r * 0.26);
+        int iconWidth = r/13;
+        int leftStart = centerX - iconWidth;
+        int topStart = (int) (centerY - r * 0.45);
+        int leftEnd = centerX + iconWidth;
+        int topEnd = (int) (centerY - (r * 0.45 - 1.5 * iconWidth));
 
         for (int i = 0; i < sectorCount; i++) {
             drawable = ContextCompat.getDrawable(context, images[i]);
@@ -125,21 +130,24 @@ public class CircularMenuView extends View {
         }
     }
 
-    private void drawLines(Canvas canvas) {
-
+    private void drawSectors(Canvas canvas) {
+        float sectorAngle;
+        sectorList.clear();
         for (int i = 0; i < sectorCount; i++) {
-            float startAngle = i * arcAngle;
-            float endAngle = startAngle + arcAngle;
-            float x = (float) ((r - 10) * Math.cos(Math.toRadians(endAngle))) / 2;
-            float y = (float) ((r - 10) * Math.sin(Math.toRadians(endAngle))) / 2;
-            canvas.drawLine(arcBounds.centerX(), arcBounds.centerY(), arcBounds.centerX() + x, arcBounds.centerY() + y, linePaint);
+            sectorAngle = startAngle + arcAngle * i;
+            canvas.drawArc(arcBounds, sectorAngle, arcAngle, true, sectorPaint);
+            Sector sector = new Sector(sectorAngle, sectorAngle + arcAngle, i);
+            sectorList.add(sector);
         }
     }
 
-    private void drawSectors(Canvas canvas) {
+    private void drawLines(Canvas canvas) {
         for (int i = 0; i < sectorCount; i++) {
-            float startAngle = i * arcAngle;
-            canvas.drawArc(arcBounds, startAngle, arcAngle, true, sectorPaint);
+            float sectorAngle = startAngle + i * arcAngle;
+            float endAngle = sectorAngle + arcAngle;
+            float x = (float) ((r - 10) * Math.cos(Math.toRadians(endAngle))) / 2;
+            float y = (float) ((r - 10) * Math.sin(Math.toRadians(endAngle))) / 2;
+            canvas.drawLine(arcBounds.centerX(), arcBounds.centerY(), arcBounds.centerX() + x, arcBounds.centerY() + y, linePaint);
         }
     }
 
@@ -171,32 +179,34 @@ public class CircularMenuView extends View {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
     }
 
+
+
+    private int getSectorOfAngle(float angle) {
+
+        Log.d("TAG", "List of sectors:" + sectorList);
+
+        for (int i = 0; i < sectorList.size(); i++) {
+            Sector currentSector = sectorList.get(i);
+            if (currentSector.containsAngle(angle)) {
+                Log.d("TAG", "Sector pos:" + currentSector.getPos());
+                return currentSector.getPos();
+            }
+        }
+        return sectorCount;
+    }
+
     private void highlightSelectedSector(Canvas canvas, int pos) {
         sectorPaint.setColor(Color.GREEN);
         sectorPaint.setStyle(Paint.Style.FILL);
         sectorPaint.setShader(new RadialGradient(centerX, centerY, 2 * r, Color.GREEN, Color.BLACK, Shader.TileMode.MIRROR));
-
-        float startAngle = pos * arcAngle;
-        canvas.drawArc(arcBounds, startAngle, arcAngle, true, sectorPaint);
+        Log.d("TAG", "Sector pos in highlight: " + pos);
+        float sectorAngle = startAngle + pos * arcAngle;
+        canvas.drawArc(arcBounds, sectorAngle, arcAngle, true, sectorPaint);
 
         sectorPaint.setAntiAlias(true);
         sectorPaint.setColor(Color.GRAY);
         sectorPaint.setStyle(Paint.Style.FILL);
         sectorPaint.setShader(null);
-    }
-
-    private int getSectorOfAngle(float angle) {
-        Log.d("TAG", " raw angle: " + angle);
-        Log.d("TAG", " rotation: " + getRotation());
-        float checkAngle = Math.abs(arcAngle - 360);
-
-        for (int i = 0; i <= sectorCount; i++) {
-            if (angle > checkAngle) {
-                return i;
-            }
-            checkAngle = Math.abs(checkAngle - arcAngle);
-        }
-        return sectorCount;
     }
 
     private float getAngleOfPoint(float x, float y) {
@@ -212,7 +222,7 @@ public class CircularMenuView extends View {
     public int getSector(float x, float y) {
         if (touchOnView(x, y)) {
             int sectorNumber = getSectorOfAngle(getAngleOfPoint(x, y));
-            return Math.abs(sectorNumber - sectorCount + 1);
+            return sectorNumber;
         }
         return -1;
     }
@@ -279,34 +289,35 @@ public class CircularMenuView extends View {
     }
 
     private void setActionSelectedSector() {
+        float rotationOffset =  - startAngle - arcAngle / 4;
         switch (selectedSector) {
             case 0:
                 Toast.makeText(getContext(), R.string.callback, Toast.LENGTH_SHORT).show();
-                animate().rotation(arcAngle * 5 - arcAngle / 4).setDuration(ANIMATE_TO_CENTER_SPEED);
+                animate().rotation(arcAngle * 5 + rotationOffset).setDuration(ANIMATE_TO_CENTER_SPEED);
                 break;
             case 1:
                 Toast.makeText(getContext(), R.string.cellular_network, Toast.LENGTH_SHORT).show();
-                animate().rotation(arcAngle * 4 - arcAngle / 4).setDuration(ANIMATE_TO_CENTER_SPEED);
+                animate().rotation(arcAngle * 4 + rotationOffset).setDuration(ANIMATE_TO_CENTER_SPEED);
                 break;
             case 2:
                 Toast.makeText(getContext(), R.string.end_call, Toast.LENGTH_SHORT).show();
-                animate().rotation(arcAngle * 3 - arcAngle / 4).setDuration(ANIMATE_TO_CENTER_SPEED);
+                animate().rotation(arcAngle * 3 + rotationOffset).setDuration(ANIMATE_TO_CENTER_SPEED);
                 break;
             case 3:
                 Toast.makeText(getContext(), R.string.high_connection, Toast.LENGTH_SHORT).show();
-                animate().rotation(arcAngle * 2 - arcAngle / 4).setDuration(ANIMATE_TO_CENTER_SPEED);
+                animate().rotation(arcAngle * 2  + rotationOffset).setDuration(ANIMATE_TO_CENTER_SPEED);
                 break;
             case 4:
                 Toast.makeText(getContext(), R.string.mms, Toast.LENGTH_SHORT).show();
-                animate().rotation(arcAngle - arcAngle / 4).setDuration(ANIMATE_TO_CENTER_SPEED);
+                animate().rotation(arcAngle  + rotationOffset).setDuration(ANIMATE_TO_CENTER_SPEED);
                 break;
             case 5:
                 Toast.makeText(getContext(), R.string.bluetooth, Toast.LENGTH_SHORT).show();
-                animate().rotation(-arcAngle / 4).setDuration(ANIMATE_TO_CENTER_SPEED);
+                animate().rotation( + rotationOffset).setDuration(ANIMATE_TO_CENTER_SPEED);
                 break;
             case 6:
                 Toast.makeText(getContext(), R.string.call_transfer, Toast.LENGTH_SHORT).show();
-                animate().rotation(-arcAngle - arcAngle / 4).setDuration(ANIMATE_TO_CENTER_SPEED);
+                animate().rotation(-arcAngle  + rotationOffset).setDuration(ANIMATE_TO_CENTER_SPEED);
                 break;
         }
     }
