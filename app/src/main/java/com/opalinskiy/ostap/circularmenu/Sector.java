@@ -23,10 +23,8 @@ public class Sector {
 
         if(startAngle < endAngle ){
             result = (angle >= startAngle && angle < endAngle);
-            Log.d("TAG", "sector NORMAL ");
         } else {
-            Log.d("TAG", "sector NORMAL ");
-            return angle < endAngle;
+            return angle >startAngle || angle <= endAngle;
         }
         return result;
     }

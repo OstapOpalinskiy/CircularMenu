@@ -38,7 +38,7 @@ public class CircularMenuView extends View {
     private RectF arcBounds;
     private int sectorCount;
     private float arcAngle;
-    private float   startAngle;
+    private float startAngle;
     private int r;
 
     private int arkStroke;
@@ -59,7 +59,6 @@ public class CircularMenuView extends View {
             R.drawable.cellular_network,
             R.drawable.end_call,
             R.drawable.high_connection,
-            //      R.drawable.missed_call,
             R.drawable.mms
     };
     private Drawable drawable;
@@ -116,15 +115,17 @@ public class CircularMenuView extends View {
     }
 
     private void drawIcons(Canvas canvas) {
-        int iconWidth = r/13;
-        int leftStart = centerX - iconWidth;
-        int topStart = (int) (centerY - r * 0.45);
-        int leftEnd = centerX + iconWidth;
-        int topEnd = (int) (centerY - (r * 0.45 - 1.5 * iconWidth));
+        int sectorNumberAdjustment = 7/sectorCount;
+        float iconWidth = r / 13 * sectorNumberAdjustment;
+        float leftStart = centerX - iconWidth;
+        float leftEnd = centerX + iconWidth;
+        float iconFromCenter = r * 0.4f;
+        int topStart = (int) (centerY - iconFromCenter);
+        int topEnd = (int) (centerY - (iconFromCenter - 1.5 * iconWidth));
 
         for (int i = 0; i < sectorCount; i++) {
             drawable = ContextCompat.getDrawable(context, images[i]);
-            drawable.setBounds(leftStart, topStart, leftEnd, topEnd);
+            drawable.setBounds((int)leftStart, topStart, (int)leftEnd, topEnd);
             drawable.draw(canvas);
             canvas.rotate(arcAngle, centerX, centerY);
         }
@@ -180,7 +181,6 @@ public class CircularMenuView extends View {
     }
 
 
-
     private int getSectorOfAngle(float angle) {
 
         Log.d("TAG", "List of sectors:" + sectorList);
@@ -199,7 +199,7 @@ public class CircularMenuView extends View {
         sectorPaint.setColor(Color.GREEN);
         sectorPaint.setStyle(Paint.Style.FILL);
         sectorPaint.setShader(new RadialGradient(centerX, centerY, 2 * r, Color.GREEN, Color.BLACK, Shader.TileMode.MIRROR));
-        Log.d("TAG", "Sector pos in highlight: " + pos);
+//        Log.d("TAG", "Sector pos in highlight: " + pos);
         float sectorAngle = startAngle + pos * arcAngle;
         canvas.drawArc(arcBounds, sectorAngle, arcAngle, true, sectorPaint);
 
@@ -251,7 +251,7 @@ public class CircularMenuView extends View {
                     distanceX, distanceY,
                     e2.getX() - centerX,
                     e2.getY() - centerY);
-            rotateTo(getRotation() - (int) scrollTheta / 4);
+            rotateTo(getRotation() - (int) scrollTheta / 8);
             return true;
         }
 
@@ -289,35 +289,36 @@ public class CircularMenuView extends View {
     }
 
     private void setActionSelectedSector() {
-        float rotationOffset =  - startAngle - arcAngle / 4;
+        float rotationOffset = getRotationOffset();
+        //  float rotationOffset = -startAngle + 0.5f * arcAngle;
         switch (selectedSector) {
             case 0:
-                Toast.makeText(getContext(), R.string.callback, Toast.LENGTH_SHORT).show();
+                Toast.makeText(getContext(), R.string.bluetooth, Toast.LENGTH_SHORT).show();
                 animate().rotation(arcAngle * 5 + rotationOffset).setDuration(ANIMATE_TO_CENTER_SPEED);
                 break;
             case 1:
-                Toast.makeText(getContext(), R.string.cellular_network, Toast.LENGTH_SHORT).show();
+                Toast.makeText(getContext(), R.string.call_transfer, Toast.LENGTH_SHORT).show();
                 animate().rotation(arcAngle * 4 + rotationOffset).setDuration(ANIMATE_TO_CENTER_SPEED);
                 break;
             case 2:
-                Toast.makeText(getContext(), R.string.end_call, Toast.LENGTH_SHORT).show();
+                Toast.makeText(getContext(), R.string.callback, Toast.LENGTH_SHORT).show();
                 animate().rotation(arcAngle * 3 + rotationOffset).setDuration(ANIMATE_TO_CENTER_SPEED);
                 break;
             case 3:
-                Toast.makeText(getContext(), R.string.high_connection, Toast.LENGTH_SHORT).show();
-                animate().rotation(arcAngle * 2  + rotationOffset).setDuration(ANIMATE_TO_CENTER_SPEED);
+                Toast.makeText(getContext(), R.string.cellular_network, Toast.LENGTH_SHORT).show();
+                animate().rotation(arcAngle * 2 + rotationOffset).setDuration(ANIMATE_TO_CENTER_SPEED);
                 break;
             case 4:
-                Toast.makeText(getContext(), R.string.mms, Toast.LENGTH_SHORT).show();
-                animate().rotation(arcAngle  + rotationOffset).setDuration(ANIMATE_TO_CENTER_SPEED);
+                Toast.makeText(getContext(), R.string.end_call, Toast.LENGTH_SHORT).show();
+                animate().rotation(arcAngle + rotationOffset).setDuration(ANIMATE_TO_CENTER_SPEED);
                 break;
             case 5:
-                Toast.makeText(getContext(), R.string.bluetooth, Toast.LENGTH_SHORT).show();
-                animate().rotation( + rotationOffset).setDuration(ANIMATE_TO_CENTER_SPEED);
+                Toast.makeText(getContext(), R.string.high_connection, Toast.LENGTH_SHORT).show();
+                animate().rotation(+rotationOffset).setDuration(ANIMATE_TO_CENTER_SPEED);
                 break;
             case 6:
-                Toast.makeText(getContext(), R.string.call_transfer, Toast.LENGTH_SHORT).show();
-                animate().rotation(-arcAngle  + rotationOffset).setDuration(ANIMATE_TO_CENTER_SPEED);
+                Toast.makeText(getContext(), R.string.mms, Toast.LENGTH_SHORT).show();
+                animate().rotation(-arcAngle + rotationOffset).setDuration(ANIMATE_TO_CENTER_SPEED);
                 break;
         }
     }
@@ -339,6 +340,34 @@ public class CircularMenuView extends View {
         } else {
             scrollAnimator.cancel();
         }
+    }
+
+    private float getRotationOffset() {
+        float ratio;
+        switch (sectorCount) {
+            case 2:
+                ratio = -1;
+                break;
+            case 3:
+            case 7:
+                ratio = 0.25f;
+                break;
+            case 4:
+                ratio = 2.5f;
+                break;
+            case 5:
+                ratio = 1.75f;
+                break;
+            case 6:
+                ratio = 1;
+                break;
+            case 8:
+                ratio = -0.5f;
+                break;
+            default:
+                ratio = 1;
+        }
+        return -startAngle - ratio * arcAngle;
     }
 
     private void setPaints() {
