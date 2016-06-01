@@ -55,7 +55,7 @@ public class CircularMenuView extends View {
     private int[] images = {
             R.drawable.bluetooth,
             R.drawable.call_transfer,
-            R.drawable.callback,
+//            R.drawable.callback,
             R.drawable.cellular_network,
             R.drawable.end_call,
             R.drawable.high_connection,
