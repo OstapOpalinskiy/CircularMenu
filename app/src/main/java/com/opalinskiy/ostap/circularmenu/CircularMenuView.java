@@ -34,6 +34,8 @@ public class CircularMenuView extends View {
     private Paint centerPaintBig;
     private Paint centerPaintSmall;
     private Paint arcPaint;
+    private Paint arcPaintShadow;
+    private Paint linePaintShadow;
 
     private RectF arcBounds;
     private int sectorCount;
@@ -41,13 +43,18 @@ public class CircularMenuView extends View {
     private float startAngle;
     private int r;
 
-    private int arkStroke;
-    private int arcColor;
+    private int outerBoundStroke;
+    private int outerBoundShadowColor;
+    private int outerBoundColor;
     private int lineStroke;
     private int lineColor;
+    private int lineShadowColor;
     private int sectorColor;
     private int highlightedSectorColor;
+    private int selectedSectorShadowColor;
+    private int selectedSectorShadowStrength;
     private int smallCenterColor;
+    private int smallCenterShadowColor;
     private int bigCenterColor;
 
     private int centerX;
@@ -55,7 +62,7 @@ public class CircularMenuView extends View {
     private int[] images = {
             R.drawable.bluetooth,
             R.drawable.call_transfer,
-//            R.drawable.callback,
+           // R.drawable.callback,
             R.drawable.cellular_network,
             R.drawable.end_call,
             R.drawable.high_connection,
@@ -106,12 +113,12 @@ public class CircularMenuView extends View {
         drawSectors(canvas);
         drawLines(canvas);
         drawArks(canvas);
-        drawIcons(canvas);
-
         if (selectedSector > -1) {
             highlightSelectedSector(canvas, selectedSector);
         }
+        drawIcons(canvas);
         drawCenter(canvas);
+
     }
 
     private void drawIcons(Canvas canvas) {
@@ -148,6 +155,7 @@ public class CircularMenuView extends View {
             float endAngle = sectorAngle + arcAngle;
             float x = (float) ((r - 10) * Math.cos(Math.toRadians(endAngle))) / 2;
             float y = (float) ((r - 10) * Math.sin(Math.toRadians(endAngle))) / 2;
+            canvas.drawLine(arcBounds.centerX(), arcBounds.centerY(), arcBounds.centerX() + x, arcBounds.centerY() + y, linePaintShadow);
             canvas.drawLine(arcBounds.centerX(), arcBounds.centerY(), arcBounds.centerX() + x, arcBounds.centerY() + y, linePaint);
         }
     }
@@ -155,13 +163,14 @@ public class CircularMenuView extends View {
     private void drawCenter(Canvas canvas) {
         canvas.drawCircle(arcBounds.centerX(), arcBounds.centerY(), r / 8, centerPaintBig);
         canvas.drawCircle(arcBounds.centerX(), arcBounds.centerY(), r / 12, centerPaintSmall);
+        canvas.drawCircle(centerX, centerY, r/16, arcPaint);
         sectorPaint.setShader(null);
     }
 
     private void drawArks(Canvas canvas) {
-        RectF bounds = new RectF(arcBounds.left + 5, arcBounds.top + 5, arcBounds.right - 4, arcBounds.bottom - 4);
-        canvas.drawArc(bounds, 0, 360, false, arcPaint);
-        sectorPaint.setShader(null);
+        canvas.drawCircle(centerX, centerY, r/2 - 14, arcPaintShadow);
+        canvas.drawCircle(centerX, centerY, r / 2 - 8, arcPaint);
+       // sectorPaint.setShader(null);
     }
 
     @Override
@@ -196,16 +205,18 @@ public class CircularMenuView extends View {
     }
 
     private void highlightSelectedSector(Canvas canvas, int pos) {
-        sectorPaint.setColor(Color.GREEN);
-        sectorPaint.setStyle(Paint.Style.FILL);
-        sectorPaint.setShader(new RadialGradient(centerX, centerY, 2 * r, Color.GREEN, Color.BLACK, Shader.TileMode.MIRROR));
-//        Log.d("TAG", "Sector pos in highlight: " + pos);
-        float sectorAngle = startAngle + pos * arcAngle;
-        canvas.drawArc(arcBounds, sectorAngle, arcAngle, true, sectorPaint);
+        float startAngle = this.startAngle + pos * arcAngle;
+        canvas.drawArc(arcBounds, startAngle, arcAngle, true, sectorPaint);
 
-        sectorPaint.setAntiAlias(true);
-        sectorPaint.setColor(Color.GRAY);
-        sectorPaint.setStyle(Paint.Style.FILL);
+        sectorPaint.setColor(selectedSectorShadowColor);
+        sectorPaint.setShader(null);
+        canvas.drawArc(arcBounds, startAngle, arcAngle + selectedSectorShadowStrength, true, sectorPaint);
+
+        sectorPaint.setColor(highlightedSectorColor);
+        sectorPaint.setShader(new RadialGradient(centerX, centerY, 2 * r, highlightedSectorColor, Color.BLACK, Shader.TileMode.MIRROR));
+        canvas.drawArc(arcBounds, startAngle, arcAngle, true, sectorPaint);
+
+        sectorPaint.setColor(sectorColor);
         sectorPaint.setShader(null);
     }
 
@@ -373,32 +384,99 @@ public class CircularMenuView extends View {
     private void setPaints() {
         sectorPaint = new Paint();
         sectorPaint.setAntiAlias(true);
-        sectorPaint.setColor(Color.GRAY);
+        sectorPaint.setColor(sectorColor);
         sectorPaint.setStyle(Paint.Style.FILL);
 
         linePaint = new Paint();
-        linePaint.setColor(Color.RED);
+        linePaint.setColor(lineColor);
         linePaint.setAntiAlias(true);
         linePaint.setStyle(Paint.Style.STROKE);
-        linePaint.setStrokeWidth(6);
+        linePaint.setStrokeWidth(lineStroke);
+
+        linePaintShadow = new Paint();
+        linePaintShadow.setColor(lineShadowColor);
+        linePaintShadow.setAntiAlias(true);
+        linePaintShadow.setStyle(Paint.Style.STROKE);
+        linePaintShadow.setStrokeWidth(lineStroke * 2);
 
         arcPaint = new Paint();
-        arcPaint.setColor(Color.RED);
+        arcPaint.setColor(outerBoundColor);
         arcPaint.setAntiAlias(true);
         arcPaint.setStyle(Paint.Style.STROKE);
-        arcPaint.setStrokeWidth(7);
+        arcPaint.setStrokeWidth(outerBoundStroke);
+
+        arcPaintShadow = new Paint();
+        arcPaintShadow.setColor(outerBoundShadowColor);
+        arcPaintShadow.setAntiAlias(true);
+        arcPaintShadow.setStyle(Paint.Style.STROKE);
+        arcPaintShadow.setStrokeWidth(outerBoundStroke + outerBoundStroke/2);
 
         centerPaintSmall = new Paint();
         centerPaintSmall.setAntiAlias(true);
-        centerPaintSmall.setColor(Color.YELLOW);
-        centerPaintSmall.setShader(new RadialGradient(centerX, centerY, r / 4, Color.YELLOW,
+        centerPaintSmall.setColor(smallCenterColor);
+        centerPaintSmall.setShader(new RadialGradient(centerX, centerY, r / 4, smallCenterColor,
                 Color.GRAY, Shader.TileMode.MIRROR));
 
         centerPaintBig = new Paint();
         centerPaintBig.setAntiAlias(true);
         centerPaintBig.setStyle(Paint.Style.FILL);
-        centerPaintBig.setColor(Color.GREEN);
-        centerPaintBig.setShader(new RadialGradient(centerX, centerY, r / 6, Color.GREEN, Color.GRAY, Shader.TileMode.MIRROR));
+        centerPaintBig.setColor(bigCenterColor);
+        centerPaintBig.setShader(new RadialGradient(centerX, centerY, r / 6, bigCenterColor, Color.GRAY, Shader.TileMode.MIRROR));
     }
 
+    public void setDetector(GestureDetector detector) {
+        this.detector = detector;
+    }
+
+    public void setOuterBoundStroke(int outerBoundStroke) {
+        this.outerBoundStroke = outerBoundStroke;
+    }
+
+    public void setOuterBoundShadowColor(int outerBoundShadowColor) {
+        this.outerBoundShadowColor = outerBoundShadowColor;
+    }
+
+    public void setOuterBoundColor(int outerBoundColor) {
+        this.outerBoundColor = outerBoundColor;
+    }
+
+    public void setLineStroke(int lineStroke) {
+        this.lineStroke = lineStroke;
+    }
+
+    public void setLineColor(int lineColor) {
+        this.lineColor = lineColor;
+    }
+
+    public void setLineShadowColor(int lineShadowColor) {
+        this.lineShadowColor = lineShadowColor;
+    }
+
+    public void setSectorColor(int sectorColor) {
+        this.sectorColor = sectorColor;
+    }
+
+    public void setHighlightedSectorColor(int highlightedSectorColor) {
+        this.highlightedSectorColor = highlightedSectorColor;
+    }
+
+    public void setSelectedSectorShadowColor(int selectedSectorShadowColor) {
+        this.selectedSectorShadowColor = selectedSectorShadowColor;
+    }
+
+    public void setSelectedSectorShadowStrength(int selectedSectorShadowStrength) {
+        this.selectedSectorShadowStrength = selectedSectorShadowStrength;
+    }
+
+    public void setSmallCenterColor(int smallCenterColor) {
+        this.smallCenterColor = smallCenterColor;
+    }
+
+    public void setSmallCenterShadowColor(int smallCenterShadowColor) {
+        this.smallCenterShadowColor = smallCenterShadowColor;
+    }
+
+    public void setBigCenterColor(int bigCenterColor) {
+        this.bigCenterColor = bigCenterColor;
+    }
 }

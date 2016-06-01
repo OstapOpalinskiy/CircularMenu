@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <declare-styleable name="CircularViewLayout">
+
+        <attr name="outerBoundColor" format="color" />
+        <attr name="outerBoundShadowColor" format="color" />
+        <attr name="outerBoundStroke" format="integer" />
+
+        <attr name="lineColor" format="color" />
+        <attr name="lineShadowColor" format="color" />
+        <attr name="lineStroke" format="integer" />
+
+        <attr name="sectorColor" format="color" />
+        <attr name="selectedSectorColor" format="color" />
+        <attr name="selectedSectorShadowColor" format="color" />
+        <attr name="sectorShadowStrength" format="integer" />
+
+        <attr name="smallCenterColor" format="color" />
+        <attr name="smallCenterShadowColor" format="color" />
+        <attr name="bigCenterColor" format="color" />
+    </declare-styleable>
+</resources>
