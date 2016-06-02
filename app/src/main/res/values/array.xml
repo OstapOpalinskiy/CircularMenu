@@ -3,10 +3,9 @@
     <integer-array name="icons">
         <item>@drawable/bluetooth</item>
         <item>@drawable/call_transfer</item>
+        <item>@drawable/mms</item>
         <item>@drawable/cellular_network</item>
         <item>@drawable/end_call</item>
         <item>@drawable/high_connection</item>
-        <item>@drawable/mms</item>
-        <item>@drawable/callback</item>
     </integer-array>
 </resources>

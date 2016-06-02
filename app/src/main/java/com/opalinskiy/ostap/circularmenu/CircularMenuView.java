@@ -2,6 +2,7 @@ package com.opalinskiy.ostap.circularmenu;
 
 import android.animation.ValueAnimator;
 import android.content.Context;
+import android.content.res.TypedArray;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
@@ -58,15 +59,7 @@ public class CircularMenuView extends View {
 
     private int centerX;
     private int centerY;
-    //TODO: придумати як сетити масив
-    private int[] images = {
-            R.drawable.bluetooth,
-            R.drawable.call_transfer,
-            R.drawable.mms,
-            R.drawable.cellular_network,
-            R.drawable.end_call,
-            R.drawable.high_connection
-    };
+    private int[] images;
     private Drawable drawable;
     private int selectedSector = -1;
     private List<Sector> sectorList;
@@ -91,8 +84,7 @@ public class CircularMenuView extends View {
     }
 
     private void init() {
-        
-        Log.d("TAG", "init in view");
+        initIconsArray();
         sectorCount = images.length;
         arcAngle = 360 / (float) sectorCount;
         startAngle = 360 - 90 - arcAngle / 2;
@@ -107,6 +99,16 @@ public class CircularMenuView extends View {
             }
         });
         fillSectorsList();
+    }
+
+    private void initIconsArray() {
+        TypedArray ar = context.getResources().obtainTypedArray(R.array.icons);
+        int len = ar.length();
+        images = new int[len];
+        for (int i = 0; i < len; i++){
+            images[i] = ar.getResourceId(i, 0);
+        }
+        ar.recycle();
     }
 
     private void fillSectorsList() {
