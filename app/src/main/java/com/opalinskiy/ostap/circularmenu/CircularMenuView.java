@@ -19,6 +19,7 @@ import android.view.View;
 import android.widget.Scroller;
 import android.widget.Toast;
 
+import java.security.cert.CertificateNotYetValidException;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -62,15 +63,16 @@ public class CircularMenuView extends View {
     private int[] images = {
             R.drawable.bluetooth,
             R.drawable.call_transfer,
-           // R.drawable.callback,
-            R.drawable.cellular_network,
-            R.drawable.end_call,
+            // R.drawable.callback,
+//            R.drawable.cellular_network,
+//            R.drawable.end_call,
             R.drawable.high_connection,
             R.drawable.mms
     };
     private Drawable drawable;
     private int selectedSector = -1;
     private List<Sector> sectorList;
+    private List<Line> linesList;
     private int ANIMATE_TO_CENTER_SPEED = 500;
 
     public CircularMenuView(Context context) {
@@ -96,6 +98,7 @@ public class CircularMenuView extends View {
         arcAngle = 360 / (float) sectorCount;
         startAngle = 360 - 90 - arcAngle / 2;
         sectorList = new LinkedList();
+        linesList = new LinkedList();
         detector = new GestureDetector(getContext(), new GestureListener());
         scroller = new Scroller(getContext(), null, true);
         scrollAnimator = ValueAnimator.ofFloat(0, 1);
@@ -104,12 +107,21 @@ public class CircularMenuView extends View {
                 tickScrollAnimation();
             }
         });
+        fillSectorsList();
+    }
+
+    private void fillSectorsList() {
+        float sectorAngle;
+        for (int i = 0; i < sectorCount; i++) {
+            sectorAngle = startAngle + arcAngle * i;
+            Sector sector = new Sector(sectorAngle, sectorAngle + arcAngle, i);
+            sectorList.add(sector);
+        }
     }
 
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
-        Log.d("TAG", "onDraw()");
         drawSectors(canvas);
         drawLines(canvas);
         drawArks(canvas);
@@ -122,7 +134,7 @@ public class CircularMenuView extends View {
     }
 
     private void drawIcons(Canvas canvas) {
-        int sectorNumberAdjustment = 7/sectorCount;
+        int sectorNumberAdjustment = 7 / sectorCount;
         float iconWidth = r / 13 * sectorNumberAdjustment;
         float leftStart = centerX - iconWidth;
         float leftEnd = centerX + iconWidth;
@@ -132,29 +144,25 @@ public class CircularMenuView extends View {
 
         for (int i = 0; i < sectorCount; i++) {
             drawable = ContextCompat.getDrawable(context, images[i]);
-            drawable.setBounds((int)leftStart, topStart, (int)leftEnd, topEnd);
+            drawable.setBounds((int) leftStart, topStart, (int) leftEnd, topEnd);
             drawable.draw(canvas);
             canvas.rotate(arcAngle, centerX, centerY);
         }
     }
 
     private void drawSectors(Canvas canvas) {
-        float sectorAngle;
-        sectorList.clear();
-        for (int i = 0; i < sectorCount; i++) {
-            sectorAngle = startAngle + arcAngle * i;
-            canvas.drawArc(arcBounds, sectorAngle, arcAngle, true, sectorPaint);
-            Sector sector = new Sector(sectorAngle, sectorAngle + arcAngle, i);
-            sectorList.add(sector);
+        float startAngle;
+        for (int i = 0; i < sectorList.size(); i++) {
+            startAngle = sectorList.get(i).getStartAngle();
+            canvas.drawArc(arcBounds, startAngle, arcAngle, true, sectorPaint);
         }
     }
 
     private void drawLines(Canvas canvas) {
-        for (int i = 0; i < sectorCount; i++) {
-            float sectorAngle = startAngle + i * arcAngle;
-            float endAngle = sectorAngle + arcAngle;
-            float x = (float) ((r - 10) * Math.cos(Math.toRadians(endAngle))) / 2;
-            float y = (float) ((r - 10) * Math.sin(Math.toRadians(endAngle))) / 2;
+        for (int i = 0; i < linesList.size(); i++) {
+            float x = linesList.get(i).getEndX();
+            float y = linesList.get(i).getEndY();
+            Log.d("TAG", "x: " + x +  " y: " + y);
             canvas.drawLine(arcBounds.centerX(), arcBounds.centerY(), arcBounds.centerX() + x, arcBounds.centerY() + y, linePaintShadow);
             canvas.drawLine(arcBounds.centerX(), arcBounds.centerY(), arcBounds.centerX() + x, arcBounds.centerY() + y, linePaint);
         }
@@ -163,14 +171,13 @@ public class CircularMenuView extends View {
     private void drawCenter(Canvas canvas) {
         canvas.drawCircle(arcBounds.centerX(), arcBounds.centerY(), r / 8, centerPaintBig);
         canvas.drawCircle(arcBounds.centerX(), arcBounds.centerY(), r / 12, centerPaintSmall);
-        canvas.drawCircle(centerX, centerY, r/16, arcPaint);
+        canvas.drawCircle(centerX, centerY, r / 16, arcPaint);
         sectorPaint.setShader(null);
     }
 
     private void drawArks(Canvas canvas) {
-        canvas.drawCircle(centerX, centerY, r/2 - 14, arcPaintShadow);
+        canvas.drawCircle(centerX, centerY, r / 2 - 14, arcPaintShadow);
         canvas.drawCircle(centerX, centerY, r / 2 - 8, arcPaint);
-       // sectorPaint.setShader(null);
     }
 
     @Override
@@ -182,6 +189,19 @@ public class CircularMenuView extends View {
         setPivotX(centerX);
         setPivotY(centerY);
         setPaints();
+        fillLinesList();
+    }
+
+    private void fillLinesList() {
+        for (int i = 0; i < sectorCount; i++) {
+            float sectorAngle = startAngle + i * arcAngle;
+            float endAngle = sectorAngle + arcAngle;
+            float x = (float) ((r - 10) * Math.cos(Math.toRadians(endAngle))) / 2;
+            float y = (float) ((r - 10) * Math.sin(Math.toRadians(endAngle))) / 2;
+            Log.d("TAG", "In init:" + "x: " + x + " y: " + y);
+            Line currentLine = new Line(centerX, centerY, x, y);
+            linesList.add(currentLine);
+        }
     }
 
     @Override
@@ -189,15 +209,10 @@ public class CircularMenuView extends View {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
     }
 
-
     private int getSectorOfAngle(float angle) {
-
-        Log.d("TAG", "List of sectors:" + sectorList);
-
         for (int i = 0; i < sectorList.size(); i++) {
             Sector currentSector = sectorList.get(i);
             if (currentSector.containsAngle(angle)) {
-                Log.d("TAG", "Sector pos:" + currentSector.getPos());
                 return currentSector.getPos();
             }
         }
@@ -409,7 +424,7 @@ public class CircularMenuView extends View {
         arcPaintShadow.setColor(outerBoundShadowColor);
         arcPaintShadow.setAntiAlias(true);
         arcPaintShadow.setStyle(Paint.Style.STROKE);
-        arcPaintShadow.setStrokeWidth(outerBoundStroke + outerBoundStroke/2);
+        arcPaintShadow.setStrokeWidth(outerBoundStroke + outerBoundStroke / 2);
 
         centerPaintSmall = new Paint();
         centerPaintSmall.setAntiAlias(true);
