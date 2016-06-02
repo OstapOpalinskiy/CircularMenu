@@ -91,6 +91,7 @@ public class CircularMenuView extends View {
     }
 
     private void init() {
+        
         Log.d("TAG", "init in view");
         sectorCount = images.length;
         arcAngle = 360 / (float) sectorCount;
