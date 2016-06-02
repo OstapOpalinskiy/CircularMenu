@@ -1,10 +1,6 @@
 package com.opalinskiy.ostap.circularmenu;
 
-import android.util.Log;
 
-/**
- * Created by Evronot on 31.05.2016.
- */
 public class Sector {
 
     private float startAngle;
@@ -33,24 +29,8 @@ public class Sector {
         return pos;
     }
 
-    public void setPos(int pos) {
-        this.pos = pos;
-    }
-
-    public float getEndAngle() {
-        return endAngle;
-    }
-
-    public void setEndAngle(float endAngle) {
-        this.endAngle = endAngle;
-    }
-
     public float getStartAngle() {
         return startAngle;
-    }
-
-    public void setStartAngle(float startAngle) {
-        this.startAngle = startAngle;
     }
 
     @Override
