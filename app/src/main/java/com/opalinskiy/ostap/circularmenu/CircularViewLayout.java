@@ -121,4 +121,8 @@ public class CircularViewLayout extends ViewGroup {
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
     }
+
+    public void setHandler(CircularMenuHandler handler){
+        pieView.setHandler(handler);
+    }
 }

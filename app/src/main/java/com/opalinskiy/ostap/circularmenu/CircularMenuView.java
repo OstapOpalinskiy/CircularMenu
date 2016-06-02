@@ -4,7 +4,6 @@ import android.animation.ValueAnimator;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
-import android.graphics.LinearGradient;
 import android.graphics.Paint;
 import android.graphics.RadialGradient;
 import android.graphics.RectF;
@@ -17,9 +16,7 @@ import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Scroller;
-import android.widget.Toast;
 
-import java.security.cert.CertificateNotYetValidException;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -57,17 +54,18 @@ public class CircularMenuView extends View {
     private int smallCenterColor;
     private int smallCenterShadowColor;
     private int bigCenterColor;
+    private CircularMenuHandler handler;
 
     private int centerX;
     private int centerY;
+    //TODO: придумати як сетити масив
     private int[] images = {
             R.drawable.bluetooth,
             R.drawable.call_transfer,
-            // R.drawable.callback,
-//            R.drawable.cellular_network,
-//            R.drawable.end_call,
-            R.drawable.high_connection,
-            R.drawable.mms
+            R.drawable.mms,
+            R.drawable.cellular_network,
+            R.drawable.end_call,
+            R.drawable.high_connection
     };
     private Drawable drawable;
     private int selectedSector = -1;
@@ -162,8 +160,10 @@ public class CircularMenuView extends View {
             float x = linesList.get(i).getEndX();
             float y = linesList.get(i).getEndY();
             Log.d("TAG", "x: " + x +  " y: " + y);
-            canvas.drawLine(arcBounds.centerX(), arcBounds.centerY(), arcBounds.centerX() + x, arcBounds.centerY() + y, linePaintShadow);
-            canvas.drawLine(arcBounds.centerX(), arcBounds.centerY(), arcBounds.centerX() + x, arcBounds.centerY() + y, linePaint);
+            canvas.drawLine(arcBounds.centerX(), arcBounds.centerY(), arcBounds.centerX() + x,
+                    arcBounds.centerY() + y, linePaintShadow);
+            canvas.drawLine(arcBounds.centerX(), arcBounds.centerY(), arcBounds.centerX() + x,
+                    arcBounds.centerY() + y, linePaint);
         }
     }
 
@@ -261,7 +261,6 @@ public class CircularMenuView extends View {
         setRotation(angle);
     }
 
-
     // methods for scroll and fling
     @Override
     public boolean onTouchEvent(MotionEvent event) {
@@ -307,42 +306,37 @@ public class CircularMenuView extends View {
             float x = e.getX();
             float y = e.getY();
             selectedSector = getSector(x, y);
-            setActionSelectedSector();
+            setRotateSelectedSector();
+            if(handler != null){
+                handler.onItemClick(getSector(x,y));
+            }
             invalidate();
             return super.onSingleTapUp(e);
         }
     }
 
-    private void setActionSelectedSector() {
+    private void setRotateSelectedSector() {
         float rotationOffset = getRotationOffset();
-        //  float rotationOffset = -startAngle + 0.5f * arcAngle;
         switch (selectedSector) {
             case 0:
-                Toast.makeText(getContext(), R.string.bluetooth, Toast.LENGTH_SHORT).show();
                 animate().rotation(arcAngle * 5 + rotationOffset).setDuration(ANIMATE_TO_CENTER_SPEED);
                 break;
             case 1:
-                Toast.makeText(getContext(), R.string.call_transfer, Toast.LENGTH_SHORT).show();
                 animate().rotation(arcAngle * 4 + rotationOffset).setDuration(ANIMATE_TO_CENTER_SPEED);
                 break;
             case 2:
-                Toast.makeText(getContext(), R.string.callback, Toast.LENGTH_SHORT).show();
                 animate().rotation(arcAngle * 3 + rotationOffset).setDuration(ANIMATE_TO_CENTER_SPEED);
                 break;
             case 3:
-                Toast.makeText(getContext(), R.string.cellular_network, Toast.LENGTH_SHORT).show();
                 animate().rotation(arcAngle * 2 + rotationOffset).setDuration(ANIMATE_TO_CENTER_SPEED);
                 break;
             case 4:
-                Toast.makeText(getContext(), R.string.end_call, Toast.LENGTH_SHORT).show();
                 animate().rotation(arcAngle + rotationOffset).setDuration(ANIMATE_TO_CENTER_SPEED);
                 break;
             case 5:
-                Toast.makeText(getContext(), R.string.high_connection, Toast.LENGTH_SHORT).show();
                 animate().rotation(+rotationOffset).setDuration(ANIMATE_TO_CENTER_SPEED);
                 break;
             case 6:
-                Toast.makeText(getContext(), R.string.mms, Toast.LENGTH_SHORT).show();
                 animate().rotation(-arcAngle + rotationOffset).setDuration(ANIMATE_TO_CENTER_SPEED);
                 break;
         }
@@ -438,8 +432,8 @@ public class CircularMenuView extends View {
         centerPaintBig.setShader(new RadialGradient(centerX, centerY, r / 6, bigCenterColor, Color.GRAY, Shader.TileMode.MIRROR));
     }
 
-    public void setDetector(GestureDetector detector) {
-        this.detector = detector;
+    public void setHandler(CircularMenuHandler handler) {
+        this.handler = handler;
     }
 
     public void setOuterBoundStroke(int outerBoundStroke) {

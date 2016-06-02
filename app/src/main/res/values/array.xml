@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <integer-array name="icons">
+        <item>@drawable/bluetooth</item>
+        <item>@drawable/call_transfer</item>
+        <item>@drawable/cellular_network</item>
+        <item>@drawable/end_call</item>
+        <item>@drawable/high_connection</item>
+        <item>@drawable/mms</item>
+        <item>@drawable/callback</item>
+    </integer-array>
+</resources>
