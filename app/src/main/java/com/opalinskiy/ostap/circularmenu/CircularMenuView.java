@@ -130,7 +130,6 @@ public class CircularMenuView extends View {
         }
         drawIcons(canvas);
         drawCenter(canvas);
-
     }
 
     private void drawIcons(Canvas canvas) {
